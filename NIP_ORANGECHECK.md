@@ -110,7 +110,7 @@ The Nostr event is signed as usual (NIP-01 Schnorr signature over the event id).
 
 ### Distinguishing OC events from other NIP-78 traffic
 
-Kind 30078 is shared across NIP-78 apps. To enumerate OC attestations, filter on `#t: ["oc-attest"]`. Consumers SHOULD also require `scheme = bip322 | legacy` plus a valid JSON envelope in `content`.
+Kind 30078 is shared across NIP-78 apps. Publishers MUST include the `oc-attest` marker, and `#t: ["oc-attest"]` lists the attestations that carry it. Some published before the marker existed do not, so a consumer that needs completeness also queries by identity or address. Consumers SHOULD also require `scheme = bip322 | legacy` plus a valid JSON envelope in `content`.
 
 A `nostr:` identity may be bound in npub or hex form. Query both, as above, and compare decoded keys.
 
