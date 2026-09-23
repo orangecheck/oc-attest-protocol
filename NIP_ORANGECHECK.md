@@ -37,6 +37,8 @@ Attestations use **kind `30078`** — NIP-78 "application-specific data" (parame
   "kind": 30078,
   "tags": [
     ["d",          "<attestation_id>"],
+    ["t",          "<bitcoin_address>"],
+    ["t",          "oc-attest"],
     ["address",    "<bitcoin_address>"],
     ["scheme",     "bip322"],
     ["issued_at",  "<rfc3339>"],
@@ -59,7 +61,8 @@ The event `content` is the full JSON attestation envelope (see [SPEC §5.3](./SP
 | Tag | Required | Value | Purpose |
 |---|---|---|---|
 | `d` | ✅ | `<attestation_id>` — SHA-256 of the canonical message, 64 lowercase hex chars. | Parameterised-replaceable identifier. |
-| `address` | ✅ | Bitcoin singlesig address (mainnet default; testnet/signet via `network:` extension in the signed message). | Enables discovery by address. |
+| `t` | ✅ (2) | The Bitcoin address, and the literal `oc-attest`. | Relays index single-letter tags only, so these are what make an attestation findable by address and enumerable. |
+| `address` | ✅ | Bitcoin singlesig address (mainnet default; testnet/signet via `network:` extension in the signed message). | Human-readable; not indexed by relays. |
 | `scheme` | ✅ | `bip322` (preferred) or `legacy` (P2PKH only). | Enables OC events to be distinguished from other kind-30078 traffic. |
 | `issued_at` | ✅ | RFC-3339 UTC timestamp, matches the signed message. | |
 | `i` | ✖ (0+) | `<protocol>:<identifier>` — one tag per bound handle. | Enables discovery by handle. |
@@ -70,8 +73,8 @@ The event `content` is the full JSON attestation envelope (see [SPEC §5.3](./SP
 
 1. The event `content` MUST be parseable as a JSON object with at minimum `attestation_id`, `scheme`, `address`, `message`, and `signature` fields.
 2. `sha256(content.message)` MUST equal the `d` tag value AND the `attestation_id` inside the envelope.
-3. `content.address` MUST equal the `address` tag value.
-4. Every `i` tag MUST have the form `<protocol>:<identifier>` with a lowercase alphanumeric protocol and a non-empty identifier.
+3. `content.address` MUST equal the `address` tag value, and a `t` tag MUST carry the same address.
+4. Every `i` tag MUST have the form `<protocol>:<identifier>` with a lowercase alphanumeric protocol and a non-empty identifier. Tags are indexes: the signed `identities:` line is authoritative, and consumers MUST ignore an `i` tag it does not contain.
 5. Unknown tags MUST be preserved by relays and MAY be ignored by consumers.
 
 ### Signing
@@ -94,20 +97,22 @@ The Nostr event is signed as usual (NIP-01 Schnorr signature over the event id).
 ### By Bitcoin address
 
 ```json
-{ "kinds": [30078], "#address": ["<bitcoin_address>"] }
+{ "kinds": [30078], "#t": ["<bitcoin_address>"] }
 ```
 
 ### By bound identity
 
 ```json
 { "kinds": [30078], "#i": ["github:alice"] }
-{ "kinds": [30078], "#i": ["nostr:npub1..."] }
+{ "kinds": [30078], "#i": ["nostr:npub1...", "nostr:<hex pubkey>"] }
 { "kinds": [30078], "#i": ["dns:example.com"] }
 ```
 
 ### Distinguishing OC events from other NIP-78 traffic
 
-Kind 30078 is shared across NIP-78 apps. When aggregating across kind 30078 without a subject filter, consumers SHOULD require `scheme = bip322 | legacy` (no other NIP-78 consumer uses that tag) plus a valid JSON envelope in `content`.
+Kind 30078 is shared across NIP-78 apps. To enumerate OC attestations, filter on `#t: ["oc-attest"]`. Consumers SHOULD also require `scheme = bip322 | legacy` plus a valid JSON envelope in `content`.
+
+A `nostr:` identity may be bound in npub or hex form. Query both, as above, and compare decoded keys.
 
 ---
 
@@ -115,7 +120,7 @@ Kind 30078 is shared across NIP-78 apps. When aggregating across kind 30078 with
 
 1. Fetch the event. Verify the NIP-01 Schnorr signature.
 2. Parse `content` as JSON. Verify `sha256(content.message)` equals both the `d` tag and `content.attestation_id`.
-3. Verify `content.signature` against `content.address` and `content.message` using the declared `scheme` (BIP-322 or legacy).
+3. Verify `content.signature` against `content.address` and `content.message` using the declared `scheme` (BIP-322 or legacy). Confirm the signed message names the subject you queried (SECURITY.md §4.6), and when querying by identity, that the address backs no other identity on that protocol (§4.7).
 4. Recompute metrics from live Bitcoin chain state:
    - `sats_bonded` — sum of confirmed UTXOs, or `bond:` extension value when present.
    - `days_unspent` — floor of days since the oldest bonded UTXO confirmed.
