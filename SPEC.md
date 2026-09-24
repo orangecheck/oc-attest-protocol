@@ -422,6 +422,14 @@ When displaying scores:
 
 Verifiers **SHOULD** map codes to human‑readable strings in UI and MAY expose raw codes via API.
 
+A verification result's `ok` is **true** only when the signature is valid
+(`sig_ok_*`), the bond is confirmed (`bond_confirmed`), and no Policy code
+applies. A valid signature over a zero or pending bond therefore yields
+`ok: false` with `sig_ok_*` and `bond_zero` / `bond_pending`. Interfaces
+**MAY** present signature validity and bond state separately (for example
+"valid proof · 0 sats"), but **MUST NOT** present such a result as passing a
+stake gate.
+
 ---
 
 ## 10) Conformance **(normative)**

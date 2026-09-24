@@ -21,6 +21,7 @@ existing attestations.
 
 ### Changed
 
+- **§9: when a result is `ok`.** `ok` requires a valid signature, a confirmed bond and no policy code, so a zero or pending bond gives `ok: false` with `sig_ok_*` and `bond_zero` / `bond_pending`. This states the rule the reference SDK already applied, and removes an ambiguity that let two verifiers disagree.
 - **Verifier obligations 6 and 7** (SECURITY.md §4). A verifier takes the subject from the signed message, not relay tags, and holds one bond to one identity per protocol, refusing with `stake_shared`. §3 already stated the second rule ("the bond doesn't multiply"); §4 now makes it a verifier duty. Reference implementation: `@orangecheck/sdk` 1.7.0.
 - **`NIP_ORANGECHECK.md` discovery corrected.** Relays index single-letter tags only, so the documented `#address` filter never matched. By-address discovery is `#t`, the `t` tags are now in the event structure, `#t: ["oc-attest"]` enumerates attestations, and `nostr:` identities are matched in npub or hex form. The SDK and attest.ochk.io already published `t` tags; this brings the document into line.
 
