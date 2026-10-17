@@ -316,6 +316,10 @@ Given `(addr, msg, sig, scheme)`:
      a. `sats_bonded` = sum(UTXO values).
      b. `first_seen` = min(confirmation time) across all UTXOs.
      c. `days_unspent` = floor((now_utc − first_seen) / 86_400).
+     d. A verifier that enforces a minimum amount (`min_sats`) MUST instead
+        compute `days_unspent` by the oldest-first greedy rule of 5.e with
+        `min_sats` in place of `bond`. Taking the oldest coin alone lets an
+        old dust output lend its age to a fresh deposit.
 
 6. **Compute score**
    - `score_v0` per §8 using `sats_bonded` and `days_unspent` from step 5.
@@ -525,6 +529,12 @@ Verifiers MUST fail with a specific reason. Recommended codes:
 ### A.4 Why a Separate Wire Format
 
 Attestations (SPEC §2) and auth challenges (this appendix) have opposite lifetimes and risk profiles. An attestation is content-addressed and meant to be long-lived and discoverable; an auth challenge is nonce-addressed and must not be replayable. Using the *same* header literal for both would let an attacker replay an old attestation signature as a login, or vice versa. The `orangecheck-auth` vs `orangecheck` split closes that door at the grammar level — no shared parser path, no ambiguity.
+
+---
+
+## 14b) Appendix B — Bonds **(normative; see `BOND.md`)**
+
+A third wire format, header `orangecheck-bond`, pledges one unspent coin to back one subject privately. The relying party sees floors (at least N sats, at least D days) and a per-audience nullifier, never the coin. Message, verification, the bond claim, the nullifier and the floor ladder are specified in [`BOND.md`](BOND.md); vectors `tv24`–`tv28`. Like `orangecheck-auth`, its header keeps its signatures from being replayed as an attestation or a sign-in.
 
 ---
 
