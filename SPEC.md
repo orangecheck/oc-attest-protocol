@@ -342,7 +342,7 @@ Given `(addr, msg, sig, scheme)`:
 Verifiers **MUST** compute and return:
 
 - **`sats_bonded`** (integer) — Sum of confirmed, unspent UTXO values at the address, OR if `bond:` extension is present, exactly that value
-- **`days_unspent`** (integer) — Floor of days since earliest confirmation time among active UTXOs, OR if `bond:` extension is present, computed via oldest-first greedy rule (see §7.5)
+- **`days_unspent`** (integer) — Floor of days since earliest confirmation time among active UTXOs, OR if `bond:` extension is present, or for a verifier enforcing a minimum amount (§7 step 5.d), computed via oldest-first greedy rule (see §7.5)
 
 Verifiers **MAY** additionally return a `score` computed per §8.3. If returned it MUST be tagged with its algorithm identifier.
 
@@ -534,7 +534,7 @@ Attestations (SPEC §2) and auth challenges (this appendix) have opposite lifeti
 
 ## 14b) Appendix B — Bonds **(normative; see `BOND.md`)**
 
-A third wire format, header `orangecheck-bond`, pledges one unspent coin to back one subject privately. The relying party sees floors (at least N sats, at least D days) and a per-audience nullifier, never the coin. Message, verification, the bond claim, the nullifier and the floor ladder are specified in [`BOND.md`](BOND.md); vectors `tv24`–`tv28`. Like `orangecheck-auth`, its header keeps its signatures from being replayed as an attestation or a sign-in.
+A third wire format, header `orangecheck-bond`, lets one unspent coin privately back one subject. The relying party sees floors (at least N sats, at least D days) and a nullifier keyed by the registry for that audience, never the coin. Message, verification, the bond claim, the nullifier and the floor ladder are specified in [`BOND.md`](BOND.md); vectors `tv24`–`tv28`. Like `orangecheck-auth`, its header keeps its signatures from being replayed as an attestation or a sign-in.
 
 ---
 

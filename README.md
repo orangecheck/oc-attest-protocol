@@ -152,7 +152,7 @@ Publishing is **optional**. The attestation is a self-contained JSON blob signed
 | **[PROTOCOL.md](PROTOCOL.md)** | High-level protocol design and rationale |
 | **[SPEC.md](SPEC.md)** | Normative specification for implementers |
 | **[NIP_ORANGECHECK.md](NIP_ORANGECHECK.md)** | Nostr NIP for attestation publishing (kind 30078) |
-| **[BOND.md](BOND.md)** | Bonds — one unspent coin pledged privately to back one account; relying parties see floors and a per-site nullifier, never the coin |
+| **[BOND.md](BOND.md)** | Bonds — one unspent coin privately backing one account; relying parties see floors and a keyed per-site nullifier, never the coin |
 | **[LIFECYCLE.md](LIFECYCLE.md)** | Normative lifecycle stance — `expires_at` and bond withdrawal are the only in-protocol primitives; no revocation envelope is defined |
 | **[registry/extensions.md](registry/extensions.md)** | Registered extension keys |
 | **[registry/scoring.md](registry/scoring.md)** | Reference score algorithm |

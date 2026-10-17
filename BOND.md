@@ -8,14 +8,14 @@ last_updated: 2026-10-16
 # Bonds **(normative)**
 
 An attestation publishes an address and asks the world to read its balance. A
-**bond** does the opposite. One unspent coin is pledged, privately, to back one
-subject: an account, a key, an agent. The party that checks the bond learns
-which coin it is. Everyone the subject later deals with learns only that a coin
-of at least N sats, unspent for at least D days, stands behind them, plus a
-number that is the same for the same coin at the same site and different
-everywhere else.
+**bond** does the opposite. One unspent coin privately backs one subject: an
+account, a key, an agent. The party that checks the bond learns which coin it
+is. Everyone the subject later deals with learns only that a coin of at least
+N sats, unspent for at least D days, stands behind them, plus a number that is
+the same for the same coin at the same site and different everywhere else.
 
-The coin never moves. Nobody holds it. Spending it ends the bond.
+The coin stays in its holder's wallet. Nobody takes custody of it, and spending
+it ends the bond.
 
 Bonds are additive to OC Attest 1.0. Attestations, their ids and their
 verification are unchanged.
@@ -48,16 +48,21 @@ subject: <subject>
 nonce: <32 lowercase hex>
 issued_at: <YYYY-MM-DDTHH:MM:SSZ>
 expires_at: <YYYY-MM-DDTHH:MM:SSZ>
-ack: I pledge this coin to back this subject. It stays in my wallet.
+ack: I back this subject with this coin. It stays in my wallet.
 ```
 
 - `address` is the coin's address, mainnet `bc1…`/`1…`/`3…`, or testnet,
-  signet or regtest equivalents.
+  signet or regtest equivalents. Only addresses that can sign one of §2's
+  signatures can bond: P2WPKH, P2SH-P2WPKH and single-key P2TR by BIP-322
+  simple, and P2PKH by BIP-137. Other types parse but never verify.
 - `vout` is a decimal integer with no leading zeros.
 - `subject` is 1 to 256 printable ASCII characters, no spaces.
-- `issued_at` and `expires_at` bound the **signing window**, not the bond. A
-  registry SHOULD issue windows of at most 10 minutes and MUST reject a message
-  outside its window.
+- `issued_at` and `expires_at` bound the **signing window**, not the bond.
+  Both are real UTC instants; a time that rolls over, such as `T24:00:00Z` or
+  February 30, is malformed. A registry SHOULD issue windows of at most 10
+  minutes. A verifier MUST reject a window longer than one hour
+  (`bond_window_too_long`), so an old signature can't be replayed for years,
+  and MUST reject a message outside its window.
 - The header line `orangecheck-bond` differs from `orangecheck` (attestations)
   and `orangecheck-auth` (sign-in challenges), so no signature for one can be
   replayed as another.
@@ -75,9 +80,9 @@ To verify a bond at tip `H`, a verifier MUST:
 1. Parse the message strictly per §2. Reject anything else as `bond_malformed`.
 2. If it expects a particular subject, compare it byte for byte
    (`bond_subject_mismatch`).
-3. At registration, reject a message outside its signing window
-   (`bond_expired`, `bond_not_yet_valid`). A later re-check (step 6) ignores
-   the window.
+3. At registration, reject a window longer than one hour
+   (`bond_window_too_long`) and a message outside its window (`bond_expired`,
+   `bond_not_yet_valid`). A later re-check (step 6) ignores the window.
 4. Verify the signature for `address` (`sig_invalid`).
 5. Look up the coin. The output MUST exist (`coin_not_found`), its
    scriptPubKey MUST be `address`'s (`coin_address_mismatch`), it MUST be
@@ -85,8 +90,10 @@ To verify a bond at tip `H`, a verifier MUST:
    at `H` (`coin_spent`). A verifier SHOULD require
    `confirmations = H − h + 1 ≥ 6` (`coin_too_recent`).
 6. **Re-check.** A bond lasts exactly as long as its coin is unspent. A
-   registry MUST re-check the coin before vouching for it again, and MUST say
-   when it last did (§5).
+   registry MUST NOT vouch for a coin it has found spent. It MUST re-check the
+   coin once its last check is older than its own bound (ochk.io: ten
+   minutes), MAY vouch on the last check while the chain can't be read, and
+   MUST say in every claim when that check was (§5).
 
 The result is `{ bond_id, subject, address, outpoint, sats, confirmed_height:
 h, tip: { height: H, hash } }`. The coin's **age** is
@@ -98,9 +105,19 @@ is deliberate: age is the expensive part to fake.
 
 ## 4. One coin, one subject
 
-A registry MUST NOT let one coin back two subjects at once, and in this
-version a subject has at most one active bond in a registry. Releasing a bond
-frees the coin for another subject.
+A registry MUST NOT let one coin back two subjects at once
+(`coin_backs_another_account`), and in this version a subject has at most one
+active bond in a registry.
+
+Releasing a bond frees the coin for the same subject at once. It frees the coin
+for a different subject only when every claim that carried it has expired: a
+registry MUST refuse a coin released by another subject more recently than the
+longest lifetime of the claims it issues (`coin_backed_another_recently`;
+ochk.io: 30 days). Otherwise one coin could be released and re-bonded to
+account after account, each leaving a live claim behind.
+
+A registry MAY refuse coins too small to meet any `sats_floor`
+(`coin_too_small`): such a bond tells an audience nothing.
 
 ## 5. What an audience sees: the bond claim
 
@@ -131,20 +148,30 @@ exact age. It is the registry's statement, so its trust anchor is the
 registry, named by the token's issuer (family invariant 8). A holder who wants
 an audience to check for itself discloses the bond message and signature to
 that audience, which then verifies §3 against its own node (family invariant
-5). That disclosure reveals the coin to that audience.
+5). That disclosure reveals the coin to that audience. It can't recompute the
+nullifier: only the registry holds that key (§6).
 
 ## 6. Nullifier
 
 ```
-bond_nullifier = lowercase_hex(SHA-256(UTF-8(
-    "orangecheck-bond-nullifier\n" || audience || "\n" || outpoint
-)))
+bond_nullifier = lowercase_hex(HMAC-SHA256(
+    key  = nullifier_key,
+    data = UTF-8("orangecheck-bond-nullifier\n" || audience || "\n" || outpoint)
+))
 ```
 
-- The same coin at the same audience always gives the same nullifier: across
-  subjects, across releases and re-bonds, across registries.
-- Different audiences get unrelated values. Linking them needs the outpoint,
-  which only the registry and audiences given a disclosure know.
+- `nullifier_key` is a secret of at least 32 bytes that the registry holds and
+  never publishes. It MUST NOT be derived from anything public.
+- The key is what keeps the coin hidden. Outpoints are public, so an unkeyed
+  hash could be inverted by hashing every unspent output that meets the
+  claim's floors, a few minutes' work.
+- The same coin at the same audience in the same registry always gives the
+  same nullifier: across subjects, across releases and re-bonds. Different
+  audiences get unrelated values, and so do different registries.
+- A registry keeps its key for good. Rotating it gives every coin a new
+  nullifier at every audience, which lifts every ban.
+- An audience keeps one account per nullifier. That, not the floors alone, is
+  what stops one coin from standing behind many accounts at one site.
 
 **Slashing without custody.** An audience that bans a nullifier has banned the
 coin. The holder can't get past the ban by making a new account or rebonding.
@@ -165,7 +192,7 @@ the coin is a Bitcoin output.
 | Party | Learns |
 |---|---|
 | Registry | address, outpoint, amount, age, subject |
-| Audience (claim only) | floors, freshness, nullifier |
+| Audience (claim only) | floors, freshness, nullifier (keyed, so not the coin) |
 | Audience (with disclosure) | the bond message: address and outpoint |
 | Chain observers | nothing; the signature is never published |
 
@@ -179,6 +206,9 @@ the coin is a Bitcoin output.
 - **Rental.** A holder can bond their coin to someone else's subject. They
   can only do it for one subject at a time (§4). If that subject abuses an
   audience, the ban falls on the holder's coin there (§6).
+- **Account farming.** Releasing and re-bonding one coin to account after
+  account is what §4's wait refuses, and an audience that keeps one account
+  per nullifier (§6) refuses it again at its own door.
 - **Fresh coins.** A coin minted for the purpose has no age and meets no
   `days_floor`. Splitting one large coin into many small ones restarts every
   piece's age.
@@ -188,7 +218,8 @@ the coin is a Bitcoin output.
   bounds how stale a claim is; an audience that needs certainty asks for a
   disclosure and checks the coin itself.
 - **Replay.** The header, the subject and the signing window bind a signature
-  to one bond. A registry SHOULD also remember nonces until they expire.
+  to one bond, and the window is at most an hour (§2). A registry SHOULD also
+  remember nonces until they expire.
 - **Registry honesty.** A registry could vouch for a coin it never checked.
   Disclosure (§5) lets any audience catch that. A future version adds a
   zero-knowledge method (§10) that removes the need to trust the registry
@@ -204,6 +235,8 @@ floors and claim shape above are designed to carry it unchanged.
 
 ## 11. Test vectors
 
-`test-vectors/tv24.json` to `tv27.json`: a bond message and its id, a
-signature by a public test key, nullifiers for two audiences, and the floor
-ladder.
+`conformance/vectors/tv24.json` to `tv28.json`: a bond message and its id
+(tv24), signatures by a public test key (tv25), a wrong signer, an expired
+window, a window over an hour and a rolled-over time (tv26), keyed nullifiers
+for two audiences under a public test key (tv27), and the floor ladder
+(tv28).

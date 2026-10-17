@@ -15,11 +15,9 @@ existing attestations.
 
 ### Added
 
-- **`BOND.md` — bonds (1.1, draft).** A third wire format, `orangecheck-bond`: one unspent coin pledged to back one subject, signed once with BIP-322. A relying party sees floors (`1000`…`10000000` sats, `7`…`365` days) and a per-audience nullifier, never the address or amount. One coin backs one subject at a time; a coin banned at an audience stays banned until it moves, and moving it restarts its age. Additive: attestations and their ids are unchanged. Vectors `tv24`–`tv28`. Reference implementation: `@orangecheck/sdk` 1.12.0.
+- **`BOND.md` — bonds (1.1, draft).** A third wire format, `orangecheck-bond`: one unspent coin backs one subject, signed once with BIP-322. A relying party sees floors (`1000`…`10000000` sats, `7`…`365` days) and a nullifier the registry keys with its own secret, so the relying party can't search the chain for the coin. One coin backs one subject at a time, and a coin released by one subject backs another only once every claim that carried it has expired. A coin banned at an audience stays banned until it moves, and moving it restarts its age. Signing windows are capped at an hour. Additive: attestations and their ids are unchanged. Vectors `tv24`–`tv28`. Reference implementation: `@orangecheck/sdk` 1.13.0.
 
 - **`LIFECYCLE.md`** — normative companion document specifying what a publisher MAY do to an attestation after publication. Reaffirms `NIP_ORANGECHECK.md` §Revocation's "no explicit revocation event" stance and clarifies the §Revocation §2 wording ambiguity around "parameterised replacement": because the d-tag *is* the `attestation_id` (line 61), same-d replacement is structurally impossible — two distinct attestations from the same address coexist as separate canonical events under their own `(pubkey, kind, d)` coordinates. The only protocol-level primitives are `expires_at` (forward-looking commitment, set at sign time) and bond withdrawal via UTXO spend (the de-facto exit; verifier sees it on next live check). Reaffirms that dashboard-local hide flags and NIP-09 deletion-request events have no protocol force, and gives implementers a compliance summary distinguishing honest from dishonest "revoke" UI affordances. No protocol changes; clarification only.
-
-- _(nothing pending)_
 
 ### Changed
 
