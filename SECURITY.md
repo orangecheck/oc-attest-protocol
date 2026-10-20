@@ -13,7 +13,7 @@ cryptographically, what it **does not**, and the realistic adversaries an
 integrator should plan for.
 
 For the family-wide threat framework that every OrangeCheck protocol inherits,
-see [`docs.ochk.io/ecosystem/security`](https://docs.ochk.io/ecosystem/security).
+see [`docs.ochk.io/ecosystem/security`](https://ochk.io/docs/ecosystem/security).
 This file covers the attestation-specific layer on top.
 
 ---
@@ -90,7 +90,7 @@ A correct verifier MUST:
    `sats_bonded` or `days_unspent` claimed in the envelope.
 2. **Check the BIP-322 signature** against the canonical message bytes,
    exactly. Use the family's RFC-8785-compliant canonicaliser
-   (see [`/ecosystem/canonical-message`](https://docs.ochk.io/ecosystem/canonical-message)).
+   (see [`/ecosystem/canonical-message`](https://ochk.io/docs/ecosystem/canonical-message)).
 3. **Validate the issuer / audience claims** if the gate scopes proofs to a
    specific origin (`expectedAudience`). Drop attestations issued for a
    different site.

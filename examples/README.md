@@ -18,7 +18,7 @@ Minimal, runnable templates for the most common integrations. Each folder contai
 Every example has the same shape:
 
 1. A single protected endpoint.
-2. `x-oc-address` header is used as the address source for demo simplicity. **In production, bind the address to a signed session instead** — see [sign in with Bitcoin](https://docs.ochk.io/attest/guides/sign-in-with-bitcoin) for the full challenge-response pattern that proves the caller actually controls the address.
+2. `x-oc-address` header is used as the address source for demo simplicity. **In production, bind the address to a signed session instead** — see [sign in with Bitcoin](https://ochk.io/docs/attest/guides/sign-in-with-bitcoin) for the full challenge-response pattern that proves the caller actually controls the address.
 3. A `/hello` unprotected route so you can confirm the server's up.
 
 ## Run
@@ -37,6 +37,6 @@ curl -H "x-oc-address: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq" \
 The examples deliberately use `from: 'header'` because it makes the flow visible in one curl command. For a real integration:
 
 - Replace the header source with a session-backed one: `address: { from: (req) => req.session.verifiedAddress }`.
-- Run a challenge-response flow to populate that session — see the live reference at [ochk.io/signin](https://ochk.io/signin) and the [sign in with Bitcoin](https://docs.ochk.io/attest/guides/sign-in-with-bitcoin) guide.
+- Run a challenge-response flow to populate that session — see the live reference at [ochk.io/signin](https://ochk.io/signin) and the [sign in with Bitcoin](https://ochk.io/docs/attest/guides/sign-in-with-bitcoin) guide.
 - Configure `lookupTimeoutMs` and `cacheTtlMs` to match your latency/freshness tradeoff.
 - Decide on `failOpen` — defaults to `false` (fail-closed) which is almost always the right call for sybil gates.
