@@ -136,4 +136,5 @@ Security issues that may affect verifiers or the reference implementation:
 **security@ochk.io**.
 
 Please **do not** open a public issue for a verifier-impacting bug.
-We'll triage, fix, and disclose with credit.
+We aim to reply to every report within 30 days. We can't promise a time to a
+fix yet. Fixes are disclosed with credit.

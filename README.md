@@ -3,7 +3,7 @@
 **Proof of Bitcoin stake for the open web.**
 *Sats as signal. No KYC, no custody.*
 
-[![Status](https://img.shields.io/badge/status-v1.0%20stable-success)](https://ochk.io) [![License](https://img.shields.io/badge/license-CC--BY--4.0%20%2F%20MIT-blue)](#)
+[![Status](https://img.shields.io/badge/status-v1.0%20stable-success)](https://ochk.io) [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 ---
 
@@ -182,7 +182,7 @@ Spend the bonded UTXOs (implicit) or publish a replacing attestation with the sa
 
 ## License
 
-- Protocol & spec text: **CC-BY-4.0**
+- Protocol & spec text: **MIT** (see [LICENSE](./LICENSE))
 - Reference code: **MIT**
 - "OrangeCheck" name/logo: trademark; don't imply endorsement.
 

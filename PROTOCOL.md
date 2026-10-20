@@ -2,7 +2,7 @@
 title: OrangeCheck Protocol (OCP)
 status: Draft
 version: v0
-license: CC-BY-4.0
+license: MIT
 audience: architects, wallet & verifier implementers, product teams
 ---
 

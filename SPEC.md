@@ -2,7 +2,7 @@
 title: OrangeCheck Protocol — Specification
 status: Stable (Normative)
 version: 1.0
-license: CC-BY-4.0
+license: MIT
 audience: engineers implementing issuers/verifiers/wallet integrations
 conformance: REQUIRED sections are marked **(normative)**
 ---
