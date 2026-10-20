@@ -13,7 +13,7 @@ cryptographically, what it **does not**, and the realistic adversaries an
 integrator should plan for.
 
 For the family-wide threat framework that every OrangeCheck protocol inherits,
-see [`docs.ochk.io/ecosystem/security`](https://ochk.io/docs/ecosystem/security).
+see [`ochk.io/docs/ecosystem/security`](https://ochk.io/docs/ecosystem/security).
 This file covers the attestation-specific layer on top.
 
 ---
