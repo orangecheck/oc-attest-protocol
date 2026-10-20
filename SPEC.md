@@ -205,7 +205,7 @@ Verifiers **MUST** support lookup by attestation ID. Implementation:
   "signature": "AkcwRAIg...",
   "issued_at": "2026-04-22T12:00:00Z",
   "expires_at": "2027-04-22T12:00:00Z",
-  "verification_url": "https://ochk.io/verify/a3f5b8c2...",
+  "verification_url": "https://attest.ochk.io/attest/a3f5b8c2...",
   "publish_targets": ["nostr", "ipfs"],
   "relay_hints": ["wss://relay.damus.io", "wss://relay.primal.net"]
 }
@@ -485,7 +485,7 @@ Suggested set:
 
 ## 14) Appendix A — Signed-Challenge Auth **(informative)**
 
-OrangeCheck defines a sibling wire format for one-shot auth flows ("prove you control this address right now") that deliberately cannot be confused with a reputation attestation. An RP issues a short-lived challenge, the holder signs it BIP-322, and the RP binds the proven address to a session. Live reference implementation at [`ochk.io/signin`](https://ochk.io/signin) + [`/api/auth/*`](https://ochk.io/docs/api/auth).
+OrangeCheck defines a sibling wire format for one-shot auth flows ("prove you control this address right now") that deliberately cannot be confused with a reputation attestation. An RP issues a short-lived challenge, the holder signs it BIP-322, and the RP binds the proven address to a session. Live reference implementation at [`ochk.io/signin`](https://ochk.io/signin) + [`/api/auth/*`](https://docs.ochk.io/api-reference/auth-host).
 
 ### A.1 Challenge Message
 

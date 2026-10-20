@@ -19,4 +19,4 @@ Uses `ocGateFetch` — the framework-agnostic Fetch-style guard that works in:
 - Cloudflare Workers
 - Bun / Deno
 
-For Next.js Pages API (`/api/*.ts`), use `withOcGate` instead — see [`oc-web/src/pages`](https://github.com/orangecheck/oc-web) for a worked example.
+For Next.js Pages API (`/api/*.ts`), use `withOcGate` instead — see the [`@orangecheck/gate` README](https://github.com/orangecheck/oc-packages/tree/main/gate#nextjs-pages-api-wrapper) for a worked example.

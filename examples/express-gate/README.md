@@ -17,7 +17,7 @@ curl -H 'x-oc-address: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq' \
      -X POST http://localhost:3000/post                                      # 403 not_found / below_threshold (no attestation on this address)
 ```
 
-Test against a real attestation you control by creating one at [ochk.io/create](https://ochk.io/create) and passing that address.
+Test against a real attestation you control by creating one at [attest.ochk.io/create](https://attest.ochk.io/create) and passing that address.
 
 ## File map
 

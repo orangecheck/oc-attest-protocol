@@ -84,8 +84,3 @@ Initial public draft.
   gate, an airdrop allowlist, and a Nostr relay.
 - `registry/` — handle-prefix registry (`github:`, `nostr:`, `email:`,
   `ens:`, `twitter:`, `web:`).
-
-[Unreleased]: https://github.com/orangecheck/oc-attest-protocol/compare/v1.0...HEAD
-[1.0]: https://github.com/orangecheck/oc-attest-protocol/compare/v0.2...v1.0
-[0.2]: https://github.com/orangecheck/oc-attest-protocol/compare/v0.1...v0.2
-[0.1]: https://github.com/orangecheck/oc-attest-protocol/releases/tag/v0.1

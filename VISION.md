@@ -99,7 +99,7 @@ Anyone on Nostr, on a forum, posting into a community. They want to stop being m
 
 ## Licensing + sustainability
 
-Open protocol, forever. The spec is [CC-BY-4.0](https://github.com/orangecheck/oc-protocol); every reference implementation is [MIT](https://github.com/orangecheck/oc-packages). Nothing about using OrangeCheck — the protocol, the SDKs, the hosted verifier at `ochk.io` — costs anything to a user or an integrator today.
+Open protocol, forever. The spec is [CC-BY-4.0](https://github.com/orangecheck/oc-attest-protocol); every reference implementation is [MIT](https://github.com/orangecheck/oc-packages). Nothing about using OrangeCheck — the protocol, the SDKs, the hosted verifier at `ochk.io` — costs anything to a user or an integrator today.
 
 Sustainability isn't a priority yet. When it becomes one, the defaults we've already committed to are:
 

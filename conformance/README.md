@@ -123,7 +123,7 @@ pytest tests/test_conformance.py
 
 ### Your implementation
 
-Read the vectors/ files, run each through the appropriate entry point, assert `expected` matches (exactly — no "close enough" on byte-level canonical outputs). Report results in [github.com/orangecheck/oc-protocol/issues](https://github.com/orangecheck/oc-protocol/issues).
+Read the vectors/ files, run each through the appropriate entry point, assert `expected` matches (exactly — no "close enough" on byte-level canonical outputs). Report results in [github.com/orangecheck/oc-attest-protocol/issues](https://github.com/orangecheck/oc-attest-protocol/issues).
 
 ## Changelog
 

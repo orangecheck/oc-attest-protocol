@@ -70,7 +70,7 @@ That's it. That's the integration surface.
 
 ## Creating an attestation (user side)
 
-1. Open `https://ochk.io` and paste your address (or connect wallet).
+1. Open `https://attest.ochk.io/create` and paste your address (or connect wallet).
 2. Add optional handles — Nostr npub, GitHub username, DNS domain, Twitter handle.
 3. Sign the one-line message with **BIP-322** (preferred) or legacy `signmessage` (P2PKH only).
 4. Your proof is published to Nostr relays and gets a shareable URL.

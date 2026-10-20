@@ -37,7 +37,7 @@ Finer-grained building blocks (`buildCanonicalMessage`, `publishAttestation`, `d
 ### Other stacks
 
 - **Python** — `pip install orangecheck`
-- **HTTP API** — every function has a zero-dependency equivalent at `https://ochk.io/api/*` (see the [API reference](https://ochk.io/docs/api))
+- **HTTP API** — every function has a zero-dependency equivalent at `https://ochk.io/api/*` (see the [API reference](https://docs.ochk.io/attest/api))
 - **Middleware** — `@orangecheck/gate` wraps Express, Fastify, Hono, Next, and Workers
 
 Everything below uses the TypeScript SDK; translating to Python or direct HTTP is a near-mechanical substitution.
@@ -497,5 +497,5 @@ console.log('Reputation:', verification.metrics);
 
 ---
 
-**Questions?** Open an issue or PR at [github.com/orangecheck/oc-protocol](https://github.com/orangecheck/oc-protocol).
+**Questions?** Open an issue or PR at [github.com/orangecheck/oc-attest-protocol](https://github.com/orangecheck/oc-attest-protocol).
 
