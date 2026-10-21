@@ -30,11 +30,11 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Resolve dependencies from a local SDK checkout so we don't need another
-// `npm install` under conformance/. Set OC_SDK_NODE_MODULES when the
-// checkout is not at the default path below.
+// `npm install` under conformance/. The default is an oc-packages clone next
+// to this repository; set OC_SDK_NODE_MODULES to use another checkout.
 const SDK_NODE_MODULES =
     process.env.OC_SDK_NODE_MODULES ??
-    '/Users/wilneeley/Projects/oc-web/packages/sdk/node_modules';
+    join(__dirname, '..', '..', 'oc-packages', 'sdk', 'node_modules');
 const require = createRequire(join(SDK_NODE_MODULES, '_.js'));
 const bip322 = require('bip322-js');
 const bitcoin = require('bitcoinjs-lib');
