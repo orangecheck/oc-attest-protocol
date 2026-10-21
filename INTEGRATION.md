@@ -148,9 +148,9 @@ const result = await publishAttestation({
   npub: pubkey,
   relays: [
     'wss://relay.damus.io',
-    'wss://relay.ochk.io',
     'wss://nos.lol',
-    'wss://relay.snort.social',
+    'wss://nostr.oxtr.dev',
+    'wss://relay.ochk.io',
   ],
 });
 
@@ -158,11 +158,11 @@ console.log('Published to:', result.success);
 console.log('Failed:', result.failed);
 ```
 
-**Default Relays:**
+**Default Relays** (`@orangecheck/sdk` 1.14.0):
 - `wss://relay.damus.io`
-- `wss://relay.ochk.io`
 - `wss://nos.lol`
-- `wss://relay.snort.social`
+- `wss://nostr.oxtr.dev`
+- `wss://relay.ochk.io`
 
 ### Check NIP-07 Availability
 
