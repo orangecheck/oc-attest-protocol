@@ -109,6 +109,11 @@ The Nostr event is signed as usual (NIP-01 Schnorr signature over the event id).
 { "kinds": [30078], "#i": ["dns:example.com"] }
 ```
 
+Any of these filters can match events from any publisher, including several
+copies under one `d` tag. Read every event a relay returns for the filter,
+paging with `until` past its limit, rather than asking for `limit: 1` or a
+small window; then keep the copies whose signatures verify (SPEC §7.2).
+
 ### Distinguishing OC events from other NIP-78 traffic
 
 Kind 30078 is shared across NIP-78 apps. Publishers MUST include the `oc-attest` marker, and `#t: ["oc-attest"]` lists the attestations that carry it. Some published before the marker existed do not, so a consumer that needs completeness also queries by identity or address. Consumers SHOULD also require `scheme = bip322 | legacy` plus a valid JSON envelope in `content`.

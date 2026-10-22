@@ -90,6 +90,7 @@ identities:
 Optional **additional** lines follow, each `key: value` on its own line.
 
 - Keys: lowercase ASCII, **sorted lexicographically** (deterministic)
+- Each key, core or extension, appears **at most once**. A verifier **MUST** reject a message that repeats a key with `decode_error`: a key signed twice has two values, and two verifiers could read different ones.
 - Entire message (core + extensions) is signed
 - Verifiers **MUST** ignore unknown keys unless local policy requires them
 
@@ -293,6 +294,7 @@ Given `(addr, msg, sig, scheme)`:
    f. `nonce` matches 32 hex lowercase
    g. `issued_at` parses as RFC‑3339 UTC (else `decode_error`)
    h. `identities` field parses correctly (protocol:identifier format)
+   i. No key appears twice (§2.2)
 
 2. **Attestation ID derivation**
    - Compute `attestation_id = SHA-256(msg)`
@@ -347,8 +349,11 @@ Given `(addr, msg, sig, scheme)`:
 
 ### 7.2 Choosing among attestations **(normative)**
 
-A lookup by address or identity can return several attestations. A verifier
-that answers with one of them:
+A lookup by id, address or identity can return several events. Anyone can
+publish an event under a subject's tags, so a verifier reads every event a
+relay holds for the subject, paging past a relay's limit, up to a bound it
+states, rather than the newest event or a small window. A verifier that
+answers with one attestation:
 
 1. considers only envelopes whose signed message names the queried subject
    (SECURITY.md §4, obligation 6);
