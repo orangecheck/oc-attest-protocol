@@ -119,6 +119,11 @@ console.log('Verification URL:', envelope.verification_url);
 - `issued_at` — ISO 8601 timestamp
 - `verification_url` — URL to verify attestation
 
+Only `message` and `signature` are signed. `address`, `identities`,
+`issued_at`, `expires_at` and `message_b64url` are copies of what the message
+says, and a republished envelope can carry any copies at all. A reader takes
+them from the message (SPEC §5.3).
+
 ---
 
 ## Publishing to Nostr
@@ -220,6 +225,16 @@ const attestations = await discoverAttestations({
 
 > `email:`, `web:`, and `did:` were in earlier drafts and are retired for v0 — see [registry/extensions.md](registry/extensions.md). Unknown protocols are preserved in the signed payload but SHOULD NOT be treated as verified bindings.
 
+**What a discovered envelope can be trusted for.** `discoverAttestations()`
+returns one envelope per attestation id, its `address`, `identities`,
+`issued_at` and `expires_at` read from the signed message (SDK 1.15.0 and
+later). If you read envelopes from relays yourself, do the same: recompute the
+id from `message`, read every field from `message` with
+`signedEnvelope(envelope)`, and never sort or decide by the envelope's own
+copies. To pick one attestation for a subject, follow SPEC §7.2: newest signed
+`issued_at` first, none dated ahead of your clock, the first whose signature
+verifies. `check()` does this for you.
+
 ---
 
 ## Verifying Attestations
@@ -262,7 +277,7 @@ const result = await verify({
 ```
 
 **Verification Steps:**
-1. Validates signature against Bitcoin address
+1. Validates signature against Bitcoin address (an `expires:` that is not an RFC 3339 time is refused as `expired`)
 2. Queries blockchain for UTXOs
 3. Computes bonded satoshis
 4. Computes oldest UTXO age

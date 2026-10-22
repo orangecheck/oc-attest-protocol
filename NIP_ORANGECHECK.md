@@ -76,6 +76,7 @@ The event `content` is the full JSON attestation envelope (see [SPEC §5.3](./SP
 3. `content.address` MUST equal the `address` tag value, and a `t` tag MUST carry the same address.
 4. Every `i` tag MUST have the form `<protocol>:<identifier>` with a lowercase alphanumeric protocol and a non-empty identifier. Tags are indexes: the signed `identities:` line is authoritative, and consumers MUST ignore an `i` tag it does not contain.
 5. Unknown tags MUST be preserved by relays and MAY be ignored by consumers.
+6. The `issued_at` and `expires` tags, the event's `created_at`, and the envelope's `address`, `identities`, `issued_at` and `expires_at` are copies, not signed data. Consumers MUST read those values from `content.message` (SPEC §5.3) and MUST NOT order or choose attestations by the copies (SPEC §7.2).
 
 ### Signing
 

@@ -99,7 +99,7 @@ Optional **additional** lines follow, each `key: value` on its own line.
   1. Fail verification if confirmed spendable balance at `address:` **< bond** (status: `bond_insufficient`)
   2. Use **exactly** `bond` for all displays and scoring (any surplus is ignored)
   3. Derive `days_unspent` for the bonded stake via the **oldest-first greedy** rule (see §5.4)
-- `expires:` — RFC-3339 UTC. Verifiers **SHOULD** warn or reject if in the past
+- `expires:` — RFC-3339 UTC. Verifiers **SHOULD** warn or reject if in the past. A verifier **MUST** reject as `expired` an attestation whose `expires:` value is present but is not an RFC-3339 date-time.
 - `network:` — `mainnet` (default), `testnet`, or `signet`
 - `publish:` — comma-separated list of publishing targets (e.g., `nostr,ipfs`)
 - `relay_hints:` — comma-separated Nostr relay URLs (e.g., `wss://relay1.com,wss://relay2.com`)
@@ -210,6 +210,16 @@ Verifiers **MUST** support lookup by attestation ID. Implementation:
   "relay_hints": ["wss://relay.damus.io", "wss://relay.primal.net"]
 }
 ```
+
+**Signed fields.** Only `message` and `signature` travel under the signature.
+`attestation_id` is the SHA-256 of `message`, and `address`, `identities`,
+`issued_at`, `expires_at` and `message_b64url` are copies of what the message
+says. Anyone can republish an envelope with those copies changed. A verifier
+**MUST** recompute `attestation_id` from `message` and **MUST** read the
+address, identities, issue time and expiry from `message` itself (§2.1, §2.2);
+it **MUST NOT** use, sort by or return the envelope's copies. Where copies of
+one `attestation_id` carry different signatures, only a signature that verifies
+counts.
 
 ---
 
@@ -327,11 +337,25 @@ Given `(addr, msg, sig, scheme)`:
 7. **Policy (optional)**
    - If `aud:` present, RP **MAY** require equality to its own origin.
    - If `expires:` present and `< now`, **SHOULD** warn or reject.
+   - If `expires:` present and not an RFC‑3339 date-time, **MUST** reject with `expired`.
 
 8. **Result**
    - Return status + metrics (see §9).
 
 **Determinism.** Verifiers SHOULD round metrics to appropriate precision for display.
+
+### 7.2 Choosing among attestations **(normative)**
+
+A lookup by address or identity can return several attestations. A verifier
+that answers with one of them:
+
+1. considers only envelopes whose signed message names the queried subject
+   (SECURITY.md §4, obligation 6);
+2. orders them by the `issued_at` in the signed message, newest first, never by
+   the envelope's `issued_at` or the Nostr event's `created_at`;
+3. treats an attestation whose signed `issued_at` is more than two minutes
+   ahead of its own clock as not yet valid, and skips it;
+4. takes the first whose signature verifies.
 
 ---
 

@@ -101,13 +101,16 @@ A correct verifier MUST:
    says so. The signature alone has no expiry; the application's policy is
    authoritative.
 6. **Take the subject from the signed message.** Relay tags (`d`, `t`, `i`)
-   are indexes and are not signed. An attestation answers a query for an id,
-   address, or identity only if its canonical message states that id,
-   address, or identity. A `nostr:` identity matches in npub or hex form.
+   are indexes and are not signed, and neither are the envelope's `address`,
+   `identities`, `issued_at` and `expires_at` (SPEC §5.3). An attestation
+   answers a query for an id, address, or identity only if its canonical
+   message states that id, address, or identity, and every field a verifier
+   uses, orders by or returns is read from that message. A `nostr:` identity
+   matches in npub or hex form.
 7. **Hold one bond to one identity per protocol** when the query is by
    identity (§3, "the bond doesn't multiply"). If the address also binds a
-   different identity on the same protocol, in this attestation or another,
-   refuse with `stake_shared`. A holder who wants two identities gated on one
+   different identity on the same protocol, in this attestation or another
+   whose signature verifies, refuse with `stake_shared`. A holder who wants two identities gated on one
    protocol uses two addresses.
 
 A correct verifier SHOULD:
