@@ -291,7 +291,7 @@ Given `(addr, msg, sig, scheme)`:
    d. If extensions exist, **keys are lexicographically sorted**
    e. `address` line value equals `addr`
    f. `nonce` matches 32 hex lowercase
-   g. `issued_at` parses as RFC‑3339 UTC
+   g. `issued_at` parses as RFC‑3339 UTC (else `decode_error`)
    h. `identities` field parses correctly (protocol:identifier format)
 
 2. **Attestation ID derivation**
@@ -338,6 +338,7 @@ Given `(addr, msg, sig, scheme)`:
    - If `aud:` present, RP **MAY** require equality to its own origin.
    - If `expires:` present and `< now`, **SHOULD** warn or reject.
    - If `expires:` present and not an RFC‑3339 date-time, **MUST** reject with `expired`.
+   - If `issued_at` is more than two minutes ahead of the verifier's clock, **MUST** reject with `not_yet_valid`.
 
 8. **Result**
    - Return status + metrics (see §9).
@@ -441,6 +442,7 @@ When displaying scores:
 **Policy**  
 - `aud_mismatch`  
 - `expired`  
+- `not_yet_valid` (signed `issued_at` more than two minutes ahead of the verifier's clock)  
 - `network_testmode` (testnet or signet indicated but verifier not in test mode)
 
 **Transport / Input**  

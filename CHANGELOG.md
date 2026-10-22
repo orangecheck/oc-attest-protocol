@@ -24,6 +24,7 @@ existing attestations.
 - **§5.3: signed fields.** Only `message` and `signature` are signed; the envelope's `address`, `identities`, `issued_at`, `expires_at` and `message_b64url` are copies. A verifier reads those fields from the message and does not use, sort by or return the envelope's copies. Where copies of one id carry different signatures, only a signature that verifies counts. SECURITY.md §4 obligations 6 and 7 and NIP_ORANGECHECK.md invariant 6 say the same. Reference implementation: `@orangecheck/sdk` 1.15.0.
 - **§7.2 (new): choosing among attestations.** A verifier answering with one attestation for an address or identity orders candidates by the signed `issued_at`, skips any dated more than two minutes ahead of its clock, and takes the first whose signature verifies.
 - **§2.2 and §7 step 7: an `expires:` that is not an RFC-3339 date-time is rejected as `expired`.**
+- **§7 step 7 and §9: a signed `issued_at` more than two minutes ahead of the verifier's clock is rejected as `not_yet_valid`** (new Policy code), and §7.1.g names `decode_error` for an `issued_at` that is not RFC-3339. Reference implementation: `@orangecheck/sdk` 1.16.1.
 
 - **§7 step 5.d: amount and age are paired.** A verifier enforcing a minimum amount and a minimum age counts the oldest coins first until they cover the amount, and ages that set by its youngest coin. Taking the single oldest coin let old dust lend its age to a fresh deposit. Reference implementation: `@orangecheck/sdk` 1.12.0 `check()`.
 
