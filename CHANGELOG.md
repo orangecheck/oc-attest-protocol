@@ -21,6 +21,7 @@ existing attestations.
 
 ### Changed
 
+- **§6.1 rule 5: a service key vouches for delivery only, not for the claims.** A service-key publisher MAY decline envelopes it will not carry, such as bindings with no proof scheme. The reference broadcaster at attest.ochk.io builds the event from the signed message alone and carries `dns:`, `github:`, `x:` and `twitter:` bindings, at most 8 of up to 128 characters each.
 - **§5.3: signed fields.** Only `message` and `signature` are signed; the envelope's `address`, `identities`, `issued_at`, `expires_at` and `message_b64url` are copies. A verifier reads those fields from the message and does not use, sort by or return the envelope's copies. Where copies of one id carry different signatures, only a signature that verifies counts. SECURITY.md §4 obligations 6 and 7 and NIP_ORANGECHECK.md invariant 6 say the same. Reference implementation: `@orangecheck/sdk` 1.15.0.
 - **§7.2 (new): choosing among attestations.** A verifier answering with one attestation for an address or identity orders candidates by the signed `issued_at`, skips any dated more than two minutes ahead of its clock, and takes the first whose signature verifies.
 - **§2.2 and §7 step 7: an `expires:` that is not an RFC-3339 date-time is rejected as `expired`.**
