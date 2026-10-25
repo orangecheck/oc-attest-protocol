@@ -17,6 +17,7 @@ This vector set covers:
 | Extension sorting + `bond` semantics | `tv14`–`tv16` | Lex sort of ext keys; bond surplus ignored. |
 | Error / rejection cases | `tv17`–`tv20` | Inputs an implementation MUST refuse. |
 | **BIP-322 signature verification** | `tv21`–`tv23` | Real signatures over canonical messages, plus a tamper-detection negative. |
+| `bond:` extension values | `tv29` | Which `bond:` values give an amount, and which are `bond_malformed`. |
 
 The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private keys published inside `conformance/generate-signatures.mjs` that are never to be used for real funds. They exist only so the vector set stays deterministically reproducible. A new implementation proves its BIP-322 verifier is correct by making `tv21` + `tv22` verify and `tv23` fail.
 
@@ -104,6 +105,18 @@ The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private 
   "expected": { "valid": true }   // or false, for negative vectors
 }
 ```
+
+
+### Category: `bond_extension`
+
+```jsonc
+{
+  "input": { "values": ["100000", "5000abc", "..."] },
+  "expected": { "bonds": [100000, null, "..."] }
+}
+```
+
+`bonds[i]` is the amount the `bond:` value `values[i]` gives, or `null` when SPEC §2.2 does not allow it and a verifier fails the attestation with `bond_malformed`. A signer refuses to write a value whose answer is `null`.
 
 ## Running the vectors
 

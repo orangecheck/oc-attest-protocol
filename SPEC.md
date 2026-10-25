@@ -96,7 +96,7 @@ Optional **additional** lines follow, each `key: value` on its own line.
 
 **Registered keys:**
 - `aud:` — origin hint (e.g., `https://example.com`). RPs **MAY** require equality to their origin
-- `bond:` — integer (sats). If present, verifiers **MUST**:
+- `bond:` — integer (sats), written in base-10 ASCII digits (`0`–`9`) only, with no sign, point, exponent, separator or space, and at most 2^53 - 1. A verifier **MUST** fail an attestation whose `bond:` value is anything else with `bond_malformed` (vector `tv29`). If present, verifiers **MUST**:
   1. Fail verification if confirmed spendable balance at `address:` **< bond** (status: `bond_insufficient`)
   2. Use **exactly** `bond` for all displays and scoring (any surplus is ignored)
   3. Derive `days_unspent` for the bonded stake via the **oldest-first greedy** rule (see §5.4)
@@ -316,7 +316,7 @@ Given `(addr, msg, sig, scheme)`:
 5. **Bonded stake handling**
    - Fetch **confirmed, unspent UTXOs** for `addr`.
    - If `bond:` extension is present:
-     a. Parse `bond` as integer (base-10 ASCII).
+     a. Parse `bond` as integer (base-10 ASCII). A value §2.2 does not allow returns **bond_malformed** (invalid).
      b. Compute `confirmed_balance` = sum(UTXO values).
      c. If `confirmed_balance < bond`, return **bond_insufficient** (invalid).
      d. Set `sats_bonded := bond` (ignore surplus).
@@ -444,6 +444,7 @@ When displaying scores:
 - `bond_zero`
 - `bond_pending` (unconfirmed UTXOs ignored)
 - `bond_insufficient` (confirmed balance < bond extension value)
+- `bond_malformed` (a `bond:` value that is not base-10 ASCII digits of at most 2^53 - 1)
 
 **Policy**  
 - `aud_mismatch`  
