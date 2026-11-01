@@ -81,6 +81,11 @@ It is explicitly **not** designed to defend against:
 - **Long-game cohort attacks** — a state-level adversary that bonds 100k sats
   for 5 years to look like a real long-term holder. Cost rises linearly with
   bond × time; design your gate accordingly.
+- **A shared stake kept where the verifier is not answered** — the read floor
+  of §4 obligation 7 tolerates one relay that does not answer, so an
+  attestation binding a second identity, held only on a relay that is silent
+  for a given check, stays unseen by that check. A reader cannot close this
+  alone; it needs the publisher to write to a quorum of the relays read.
 
 ## 4. Verifier obligations
 
@@ -111,7 +116,13 @@ A correct verifier MUST:
    identity (§3, "the bond doesn't multiply"). If the address also binds a
    different identity on the same protocol, in this attestation or another
    whose signature verifies, refuse with `stake_shared`. A holder who wants two identities gated on one
-   protocol uses two addresses.
+   protocol uses two addresses. "No other identity" rests on an attestation
+   not being there, and anyone can publish under the address's tag, so it
+   stands only on a read of the address that the read floor of relays asked
+   (those asked, less 2, plus 1) finished with a short page, and none cut off.
+   Otherwise refuse with `stake_unread`, a lookup that did not finish, never a
+   pass. The holder writes the other attestation and can put it on one relay
+   and flood that relay, so no write quorum can be assumed.
 
 A correct verifier SHOULD:
 
