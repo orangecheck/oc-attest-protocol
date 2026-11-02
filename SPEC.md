@@ -364,6 +364,11 @@ answers with one attestation:
    ahead of its own clock as not yet valid, and skips it;
 4. takes the first whose signature verifies.
 
+Before it merges or deduplicates answers from different relays, a verifier MUST
+verify each event under NIP-01 (its `id` is the SHA-256 of its serialized
+fields, and its `sig` verifies for its `pubkey`) and drop one that fails, so it
+never takes the place of another relay's copy.
+
 ---
 
 ## 8) Metrics & Scoring **(normative)**

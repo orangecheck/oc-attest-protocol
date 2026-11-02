@@ -29,6 +29,7 @@ existing attestations.
 - **§2.2 and §7 step 7: an `expires:` that is not an RFC-3339 date-time is rejected as `expired`.**
 - **§2.2 and §7.1.i: a message that repeats any key is rejected with `decode_error`.** NIP_ORANGECHECK.md discovery follows.
 - **§7.2: a lookup reads every event a relay holds for the subject,** paging past the relay's limit up to a stated bound, and lets the signatures choose. Reference implementation: `@orangecheck/sdk` 1.16.2 (2,000 events per relay).
+- **§7.2: each event is verified under NIP-01 before relay answers are merged.** A verifier drops an event whose `id` or `sig` fails before it merges or deduplicates what relays returned, so a relay serving junk under another event's id cannot displace that attestation.
 - **§7 step 7 and §9: a signed `issued_at` more than two minutes ahead of the verifier's clock is rejected as `not_yet_valid`** (new Policy code), and §7.1.g names `decode_error` for an `issued_at` that is not RFC-3339. Reference implementation: `@orangecheck/sdk` 1.16.1.
 
 - **§7 step 5.d: amount and age are paired.** A verifier enforcing a minimum amount and a minimum age counts the oldest coins first until they cover the amount, and ages that set by its youngest coin. Taking the single oldest coin let old dust lend its age to a fresh deposit. Reference implementation: `@orangecheck/sdk` 1.12.0 `check()`.
