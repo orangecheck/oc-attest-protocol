@@ -9,7 +9,7 @@
 
 ## What this is
 
-OrangeCheck is a **sybil-resistance primitive**, not a reputation system. You sign one message that links a Bitcoin address to one or more handles (Nostr, GitHub, DNS, Twitter). Anyone can verify from public chain state that the address has **N sats unspent for N days**. Platforms use that signal to filter bots out without asking users for an email, a phone number, or a KYC selfie.
+OrangeCheck is a **sybil-resistance primitive**, not a reputation system. You sign one message that links a Bitcoin address to one or more handles (Nostr, GitHub, DNS, X). Anyone can verify from public chain state that the address has **N sats unspent for N days**. Platforms use that signal to filter bots out without asking users for an email, a phone number, or a KYC selfie.
 
 - **No custody.** Funds never move.
 - **No account.** The protocol has no server you register with.
@@ -71,7 +71,7 @@ That's it. That's the integration surface.
 ## Creating an attestation (user side)
 
 1. Open `https://attest.ochk.io/create` and paste your address (or connect wallet).
-2. Add optional handles — Nostr npub, GitHub username, DNS domain, Twitter handle.
+2. Add optional handles — Nostr npub, GitHub username, DNS domain, X handle.
 3. Sign the one-line message with **BIP-322** (preferred) or legacy `signmessage` (P2PKH only).
 4. Your proof is published to Nostr relays and gets a shareable URL.
 
@@ -95,21 +95,21 @@ Optional signed extensions (sorted lexicographically): `aud`, `bond`, `expires`,
 |---|---|---|
 | You control address `bc1q…` | Cryptographic | BIP-322 signature verification |
 | The address holds `N` sats | On-chain, trustless | Query Esplora / mempool.space for UTXOs |
-| The oldest bonded UTXO is `N` days old | On-chain, trustless | Compare confirmation time to now |
+| The bonded coins are `N` days unspent | On-chain, trustless | Compare confirmation times to now: with no `bond:` and no minimum amount, the oldest coin's age; otherwise the youngest coin among the oldest ones that cover the amount ([SPEC §7](SPEC.md) step 5) |
 | You claim to be `@alice` on GitHub | **Self-asserted** | Verifier must check a public gist or repo file under @alice independently |
 
 The first three are mathematical. The fourth is a claim that platforms verify out-of-band the same way they verify any social handle — e.g., DNS TXT record, GitHub gist, signed Nostr event.
 
 ## Supported identity bindings
 
-In v2 we support four protocols where verification is actually feasible:
+v1 registers four protocols where verification is actually feasible ([SPEC §2.1.1](SPEC.md)):
 
 - `nostr:npub1…` — verify by finding a signed Nostr event containing the attestation ID.
 - `github:username` — verify by finding a public gist or repo file containing the attestation ID.
 - `dns:example.com` — verify by looking up a TXT record at `_orangecheck.example.com`.
-- `twitter:@handle` — verify by finding a public tweet containing the attestation ID (manual proof URL).
+- `x:@handle` — verify by finding a public post on X containing the attestation ID (manual proof URL). Legacy `twitter:@handle` bindings remain valid and are read as `x:`.
 
-Other protocols (`email:`, `web:`, `did:`) are explicitly out of scope for v2 until a real integrator asks.
+Other protocols (`email:`, `web:`, `did:`) are retired. They may return once a reliable, decentralized proof of control for them is specified.
 
 ## Scoring
 
@@ -127,19 +127,20 @@ There is no second algorithm. RPs with specialized needs write their own against
 
 ## Publishing & discovery (Nostr)
 
-Attestations are published as Nostr kind **30078** parameterized replaceable events with `d = orangecheck:<attestation_id>`. Discovery queries:
+Attestations are published as Nostr kind **30078** parameterized replaceable events with `d = <attestation_id>`, and `t` tags carrying the Bitcoin address and the literal `oc-attest` (relays index single-letter tags only). Discovery queries ([NIP_ORANGECHECK.md](NIP_ORANGECHECK.md)):
 
 ```json
-{"kinds": [30078], "#d":       ["orangecheck:<attestation_id>"]}   // by ID
-{"kinds": [30078], "#address": ["bc1q..."]}                         // by address
-{"kinds": [30078], "#i":       ["github:alice"]}                    // by identity
+{"kinds": [30078], "#d": ["<attestation_id>"]}   // by ID
+{"kinds": [30078], "#t": ["bc1q..."]}            // by address
+{"kinds": [30078], "#i": ["github:alice"]}       // by identity
+{"kinds": [30078], "#t": ["oc-attest"]}          // every attestation
 ```
 
 Publishing is **optional**. The attestation is a self-contained JSON blob signed with Bitcoin. Nostr is a distribution channel, not a dependency.
 
 ## What this protocol does not do
 
-- **No agent/delegation credentials.** A prior draft explored this (UCAN-style over Bitcoin). It's been retired — it doesn't use Bitcoin in a load-bearing way. If you need delegation, use UCAN.
+- **No agent/delegation credentials.** A prior draft explored this (UCAN-style over Bitcoin). It's been retired here — it didn't use Bitcoin in a load-bearing way. For Bitcoin-bound delegation, the family's protocol is [OC Agent](https://github.com/orangecheck/oc-agent-protocol).
 - **No ZK / private balance proofs.** The address is public. Use fresh addresses per attestation if linkability is a concern.
 - **No on-chain attestations.** Everything is off-chain signed messages; the chain only stores the bonded UTXOs.
 - **No aggregation into a unified score.** Every "reputation aggregator" becomes a walled garden eventually.
@@ -178,7 +179,7 @@ Anything that signs BIP-322. Sparrow, Electrum, Bitcoin Core, most hardware wall
 Because the opportunity-cost-of-holding is real, measurable, and adversary-agnostic. Ethereum gas is volatile; other-chain reserves aren't credibly neutral. Bitcoin UTXOs give us the cleanest economic signal on the open internet.
 
 **Can I revoke an attestation?**
-Spend the bonded UTXOs (implicit) or publish a replacing attestation with the same ID (explicit).
+There is no revocation envelope ([LIFECYCLE.md](LIFECYCLE.md)). Spend the bonded UTXOs, or sign it with an `expires:` date. A new attestation has a new ID; it never replaces an old one.
 
 ## License
 

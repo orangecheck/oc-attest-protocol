@@ -9,6 +9,6 @@ In early 2026 we explored extending OrangeCheck into a UCAN-style agent delegati
 1. **Bitcoin was not load-bearing.** The OCD design used secp256k1 signatures and content-addressed IDs, but the Bitcoin chain contributed nothing the protocol couldn't get from Ed25519 + IPFS. When Bitcoin is ornamental, you are just reinventing UCAN.
 2. **It chased AI-agent hype instead of a real integrator.** No forum, Nostr client, or airdrop distributor was asking for agent delegation. They were asking for a sybil filter. That's the product.
 
-If you need chained capability delegation for multi-agent systems, use [UCAN](https://ucan.xyz). If you need sybil-resistance, use OrangeCheck.
+For Bitcoin-bound agent delegation, the family's protocol is [OC Agent](https://github.com/orangecheck/oc-agent-protocol); for general capability delegation, [UCAN](https://ucan.xyz). If you need sybil-resistance, use OrangeCheck.
 
 See **[../VISION.md](../VISION.md)** for the current direction.
