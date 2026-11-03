@@ -9,7 +9,7 @@
     },
     "dependencies": {
         "@hono/node-server": "^1.13.0",
-        "@orangecheck/gate": "^0.1.2",
+        "@orangecheck/gate": "^0.3.2",
         "hono": "^4.6.0"
     },
     "devDependencies": {

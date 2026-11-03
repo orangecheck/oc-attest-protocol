@@ -8,7 +8,7 @@
         "start": "node server.js"
     },
     "dependencies": {
-        "@orangecheck/gate": "^0.1.2",
+        "@orangecheck/gate": "^0.3.2",
         "express": "^4.21.2"
     },
     "engines": {
