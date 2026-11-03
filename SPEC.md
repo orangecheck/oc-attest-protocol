@@ -237,13 +237,14 @@ Attestations **MAY** be published to Nostr relays for decentralized discovery.
   "kind": 30078,
   "tags": [
     ["d", "<attestation_id>"],
-    ["addr", "<bitcoin_address>"],
-    ["sats", "<sats_bonded>"],
-    ["days", "<days_unspent>"],
-    ["score", "<score>"],
-    ["v", "<verification_url>"],
-    ["i", "<protocol>:<identifier>", "<protocol>:<identifier>", "..."],
-    ["expires", "<unix_timestamp>"]
+    ["t", "<bitcoin_address>"],
+    ["t", "oc-attest"],
+    ["address", "<bitcoin_address>"],
+    ["scheme", "bip322"],
+    ["issued_at", "<rfc3339>"],
+    ["i", "<protocol>:<identifier>"],
+    ["expires", "<rfc3339>"],
+    ["relay", "<relay_url>"]
   ],
   "content": "<full_json_envelope>",
   "created_at": <unix_timestamp>,
@@ -251,6 +252,10 @@ Attestations **MAY** be published to Nostr relays for decentralized discovery.
   "sig": "<nostr_event_signature>"
 }
 ```
+
+[`NIP_ORANGECHECK.md`](./NIP_ORANGECHECK.md) defines each tag and the event's invariants. Relays index single-letter tags only, so the `t` tag is what makes an attestation findable by address; `address` is a readable copy no relay filter matches. Each bound identity gets its own `i` tag, because a relay matches `#i` against a tag's first value only.
+
+> **Erratum (2026-11-03).** This example carried an `addr` tag, `sats`, `days`, `score` and `v` tags, several identities in one `i` tag and a Unix `expires`. The reference SDK and attest.ochk.io do not publish that shape, and no relay indexes `addr`, so the `#addr` query in §6.2 never matched. The example now shows the event they publish, as `NIP_ORANGECHECK.md` defines it. No message, id or signature change.
 
 **Publishing Rules:**
 1. If `nostr:npub1...` identity is bound, event MUST be signed by that npub's private key
@@ -271,7 +276,7 @@ Attestations **MAY** be published to Nostr relays for decentralized discovery.
 
 **By Bitcoin Address:**
 ```json
-{"kinds": [30078], "#addr": ["<bitcoin_address>"]}
+{"kinds": [30078], "#t": ["<bitcoin_address>"]}
 ```
 
 **By Identity:**
