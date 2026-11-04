@@ -1,12 +1,14 @@
 ---
 title: OrangeCheck Protocol (OCP)
-status: Draft
-version: v0
+status: Informative (design and rationale for SPEC.md, Stable 1.0)
+version: 1.0
 license: MIT
 audience: architects, wallet & verifier implementers, product teams
 ---
 
 # OrangeCheck Protocol (OCP)
+
+> This document explains the design and why. The normative text is [SPEC.md](SPEC.md), Stable, version 1.0; where the two differ, SPEC.md governs.
 
 *A tiny, Bitcoin-native proof of "skin in the game." Sign one message, prove control of an address, and let anyone recompute sats + time from public chain data. No accounts. No custody. No spend.*
 
@@ -79,7 +81,7 @@ When `bond:` is used, the proof fails if confirmed balance < bond. Spending old 
 5. **Rotate**
    Subject may retire by spending (or simply abandoning) and issuing a new proof at a fresh address.
 
-## 6) Invariants (v0)
+## 6) Invariants
 
 - **No custody.** The protocol never requires moving coins.
 - **Transparency.** The address is visible so any verifier can recompute.
@@ -92,7 +94,7 @@ When `bond:` is used, the proof fails if confirmed balance < bond. Spending old 
 - **Linkability.** Each proof links a Bitcoin address to the bound handles. Use **fresh addresses** per proof. Rotation is encouraged.
 - **Network privacy.** Verifiers query public Esplora endpoints; Tor / VPN is recommended where appropriate.
 - **Phishing resistance.** RPs MAY enforce the `aud:` extension to bind a proof to an origin.
-- **Identity bindings are self-asserted.** Handles inside `identities:` are claims, not proofs. Verifiers MUST check each handle out-of-band (Nostr event, GitHub gist, DNS TXT record, tweet URL) before honoring.
+- **Identity bindings are self-asserted.** Handles inside `identities:` are claims, not proofs. Verifiers MUST check each handle out-of-band (Nostr event, GitHub gist, the domain's `/.well-known/orangecheck.txt` file, tweet URL) before honoring.
 
 ## 8) Metrics & Scoring (advisory)
 

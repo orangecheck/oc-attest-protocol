@@ -348,7 +348,8 @@ console.log(instructions);
 ### DNS Identity Verification
 
 ```typescript
-// User must add attestation ID to .well-known file or DNS TXT record
+// The domain's .well-known/orangecheck.txt file must hold the attestation ID.
+// It is the one proof for a dns: binding; no DNS record is read.
 
 // Check .well-known file
 const response = await fetch(

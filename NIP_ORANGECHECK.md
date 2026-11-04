@@ -175,7 +175,7 @@ An explicit revocation event kind is deliberately **not** defined by this NIP. F
 
 ## Security considerations
 
-- **Identity-binding squatting.** An `i` tag like `github:alice` is a *claim*, not a proof — it tells you the signer chose to assert the handle, not that they control it. Consumers that care about handle ownership MUST verify out-of-band (gist, DNS TXT record, tweet URL, Nostr event).
+- **Identity-binding squatting.** An `i` tag like `github:alice` is a *claim*, not a proof — it tells you the signer chose to assert the handle, not that they control it. Consumers that care about handle ownership MUST verify out-of-band (gist, the domain's `/.well-known/orangecheck.txt` file, tweet URL, Nostr event).
 - **Address linkability.** Each attestation publicly links a Bitcoin address to the bound handles. Publishers should use fresh, single-purpose addresses per proof when linkability matters.
 - **Replay.** The canonical message includes a random 16-byte nonce + `issued_at` timestamp + fixed header, which bound signatures to their issuance context and prevent cross-context replay.
 - **Relay availability.** OrangeCheck is not dependent on Nostr for correctness — the envelope in `content` is self-contained and offline-verifiable. Nostr is a convenient distribution channel; losing it doesn't invalidate any outstanding proof.

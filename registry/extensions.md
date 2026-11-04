@@ -117,14 +117,12 @@ identities:
 While identity bindings are self-asserted in the attestation, RPs can verify them externally:
 
 ### `nostr:npub1...`
-- **Method 1:** NIP-05 verification (DNS TXT record)
+- **Method 1:** NIP-05 verification (a `/.well-known/nostr.json` lookup that maps a name to the npub)
 - **Method 2:** Require Nostr event signed by npub containing attestation ID
 - **Method 3:** Cross-reference with Nostr profile metadata
 
 ### `dns:example.com`
-- **Method 1:** DNS TXT record: `orangecheck=<attestation_id>`
-- **Method 2:** `.well-known/orangecheck.json` file with attestation
-- **Method 3:** NIP-05 style verification
+- A file at `https://example.com/.well-known/orangecheck.txt` that contains the attestation ID. This is the one method; no DNS record is read.
 
 ### `x:@username`
 - **Method 1:** Post containing the attestation ID

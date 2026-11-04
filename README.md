@@ -98,7 +98,7 @@ Optional signed extensions (sorted lexicographically): `aud`, `bond`, `expires`,
 | The bonded coins are `N` days unspent | On-chain, trustless | Compare confirmation times to now: with no `bond:` and no minimum amount, the oldest coin's age; otherwise the youngest coin among the oldest ones that cover the amount ([SPEC §7](SPEC.md) step 5) |
 | You claim to be `@alice` on GitHub | **Self-asserted** | Verifier must check a public gist or repo file under @alice independently |
 
-The first three are mathematical. The fourth is a claim that platforms verify out-of-band the same way they verify any social handle — e.g., DNS TXT record, GitHub gist, signed Nostr event.
+The first three are mathematical. The fourth is a claim that platforms verify out-of-band the same way they verify any social handle — e.g., a file at `https://<domain>/.well-known/orangecheck.txt`, a GitHub gist, a signed Nostr event.
 
 ## Supported identity bindings
 
@@ -106,7 +106,7 @@ v1 registers four protocols where verification is actually feasible ([SPEC §2.1
 
 - `nostr:npub1…` — verify by finding a signed Nostr event containing the attestation ID.
 - `github:username` — verify by finding a public gist or repo file containing the attestation ID.
-- `dns:example.com` — verify by looking up a TXT record at `_orangecheck.example.com`.
+- `dns:example.com` — verify by finding the attestation ID in `https://example.com/.well-known/orangecheck.txt`. That file is the one proof; no DNS record is read.
 - `x:@handle` — verify by finding a public post on X containing the attestation ID (manual proof URL). Legacy `twitter:@handle` bindings remain valid and are read as `x:`.
 
 Other protocols (`email:`, `web:`, `did:`) are retired. They may return once a reliable, decentralized proof of control for them is specified.
