@@ -19,6 +19,7 @@ This vector set covers:
 | **BIP-322 signature verification** | `tv21`–`tv23` | Real signatures over canonical messages, plus a tamper-detection negative. |
 | Bonds ([BOND.md](../BOND.md)) | `tv24`–`tv28` | The bond message and its id (`tv24`), signatures inside and outside the signing window (`tv25`–`tv26`), keyed nullifiers for two audiences (`tv27`), and the floors an audience sees (`tv28`). |
 | `bond:` extension values | `tv29` | Which `bond:` values give an amount, and which are `bond_malformed`. |
+| Canonical form (SPEC §7.1 step 1) | `tv30` | Messages validly signed by burn key #1 that are not attestations in canonical form, each `decode_error`, and a canonical control that is not. |
 
 The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private keys published inside `conformance/generate-signatures.mjs` that are never to be used for real funds. They exist only so the vector set stays deterministically reproducible. A new implementation proves its BIP-322 verifier is correct by making `tv21` + `tv22` verify and `tv23` fail.
 
@@ -118,6 +119,24 @@ The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private 
 ```
 
 `bonds[i]` is the amount the `bond:` value `values[i]` gives, or `null` when SPEC §2.2 does not allow it and a verifier fails the attestation with `bond_malformed`. A signer refuses to write a value whose answer is `null`.
+
+### Category: `canonical_form`
+
+```jsonc
+{
+  "input": {
+    "address": "bc1q...",            // burn key #1, as tv21
+    "scheme": "bip322",
+    "cases": [
+      { "name": "canonical (control)", "message": "orangecheck\n...", "signature": "<base64>", "reason": null },
+      { "name": "no trailing LF (1.b)", "message": "orangecheck\n...", "signature": "<base64>", "reason": "decode_error" }
+    ]
+  },
+  "expected": { "signatures_valid": true }
+}
+```
+
+Every case's signature verifies for `address`. A verifier answers `reason`: `decode_error` for each message that is not an attestation in canonical form (SPEC §7.1 step 1), before any chain read, and does not for the control. `conformance/generate-canonical-form.mjs` regenerates the vector byte for byte.
 
 ## Running the vectors
 

@@ -78,16 +78,16 @@ Earlier drafts registered `email:`, `web:`, and `did:`; those are **retired for 
 - Unknown protocols MUST be preserved but MAY be ignored by verifiers
 - Duplicate protocols allowed (e.g., multiple GitHub accounts)
 
-**Examples:**
+**Examples** (the last, with no bindings, ends in one space):
 ```
 identities: nostr:npub1alice...,x:@alice
 identities: dns:alice.com,github:alice,nostr:npub1alice...
-identities:
+identities: 
 ```
 
 ### 2.2 Extensions (signed) **(normative)**
 
-Optional **additional** lines follow, each `key: value` on its own line.
+Optional **additional** lines follow, each `key: value` on its own line, with a value: an extension with an empty value is left out (vector `tv15`).
 
 - Keys: lowercase ASCII, **sorted lexicographically** (deterministic)
 - Each key, core or extension, appears **at most once**. A verifier **MUST** reject a message that repeats a key with `decode_error`: a key signed twice has two values, and two verifiers could read different ones.
@@ -294,14 +294,16 @@ Given `(addr, msg, sig, scheme)`:
 
 1. **Canonical checks**
    a. Decode `msg` (base64url → UTF‑8)
-   b. Ensure **exactly one** trailing LF
-   c. Core lines present & in order; exact literals for header/purpose/ack
-   d. If extensions exist, **keys are lexicographically sorted**
+   b. Ensure LF line ends, no CR anywhere, and **exactly one** trailing LF
+   c. Header and core lines present & in order, nothing among them; exact literals for header/purpose/ack; every line after them is an extension
+   d. If extensions exist, **keys are lowercase ASCII and lexicographically sorted**, each line `key: value` with a value
    e. `address` line value equals `addr`
    f. `nonce` matches 32 hex lowercase
    g. `issued_at` parses as RFC‑3339 UTC (else `decode_error`)
-   h. `identities` field parses correctly (protocol:identifier format)
+   h. `identities` field parses (protocol:identifier format) and is written as §2.1.1 writes it, sorted
    i. No key appears twice (§2.2)
+
+   A message that fails any of a–d, f, h or i is not an attestation, however validly it is signed: return `decode_error` (vector `tv30`).
 
 2. **Attestation ID derivation**
    - Compute `attestation_id = SHA-256(msg)`
