@@ -539,8 +539,8 @@ OrangeCheck defines a sibling wire format for one-shot auth flows ("prove you co
 orangecheck-auth
 address: <addr>
 nonce: <32-lowercase-hex>
-issued_at: <RFC-3339 UTC>
-expires_at: <RFC-3339 UTC>
+issued_at: <YYYY-MM-DDTHH:MM:SSZ>
+expires_at: <YYYY-MM-DDTHH:MM:SSZ>
 ack: I authorize this session under the OrangeCheck auth challenge.
 [<ext_key>: <ext_value> ...]
 ```
@@ -549,9 +549,10 @@ ack: I authorize this session under the OrangeCheck auth challenge.
 
 1. Header literal MUST be `orangecheck-auth` (not `orangecheck`) so signatures cannot cross-verify against attestations.
 2. The `ack:` literal MUST equal the string above — any other ack MUST cause verification to fail.
-3. Core lines MUST appear in the order shown.
-4. Extension keys MUST be lowercase ASCII and MUST be sorted lexicographically.
+3. Core lines MUST appear in the order shown, each exactly once, with nothing among them.
+4. Extension keys MUST be lowercase printable ASCII with no colon or space, MUST NOT be a core key, and MUST appear at most once each, sorted in strictly ascending byte order. Each extension MUST carry a non-empty value.
 5. `expires_at − issued_at` SHOULD be ≤ 10 minutes; implementations MUST reject expired challenges.
+6. **A challenge is valid only in its canonical form.** Every line after the header is `<key>: <value>`. A reader takes the value as every byte after the first `: ` on its line, and does not trim it. No value holds a C0 control character (U+0000 to U+001F), DEL (U+007F), U+0085, U+2028 or U+2029: an issuer MUST NOT write one, and a reader MUST answer `malformed` for one, because a wallet or another reader may show it as a line break and so display lines that a verifier does not read. There are no blank lines. Lines end in LF, with no CR anywhere, and the text ends in one LF. `issued_at` and `expires_at` are written `YYYY-MM-DDTHH:MM:SSZ` (UTC, whole seconds, a four-digit year from 0000 to 9999); a reader MUST check that pattern before it parses a time, since a date parser may also read an extended year such as `+010000-01-01T00:00:00Z`. A verifier MUST accept the canonical text. It MAY accept the same text without its final LF (a shell's command substitution drops it) as the same challenge, checking the signature over the bytes it was given. It MUST answer `malformed` for any other text, however validly signed, so that every verifier reads the same values from the same signed bytes. A relying party that issued the challenge SHOULD also compare the signed text byte for byte with the text it issued. Vector `tv31`.
 
 ### A.2 Registered Extensions
 
@@ -564,7 +565,7 @@ Signature verification follows SPEC §4 (`bip322` or `legacy`) against the full 
 
 Verifiers MUST fail with a specific reason. Recommended codes:
 
-- `malformed` — header literal, ack, or core-line count wrong.
+- `malformed` — the text is not in the canonical form of A.1 (header literal, ack, core lines, extension lines, characters, line ends or times).
 - `expired` — `now > expires_at`.
 - `not_yet_valid` — `now < issued_at` (clock skew).
 - `sig_invalid` — signature does not verify against `address`.
