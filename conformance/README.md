@@ -21,6 +21,7 @@ This vector set covers:
 | `bond:` extension values | `tv29` | Which `bond:` values give an amount, and which are `bond_malformed`. |
 | Canonical form (SPEC §7.1 step 1) | `tv30` | Messages validly signed by burn key #1 that are not attestations in canonical form, each `decode_error`, and a canonical control that is not. |
 | Challenge form (SPEC Appendix A.1) | `tv31` | `orangecheck-auth` challenges validly signed by burn key #1 that are not in canonical form, each `malformed`, among them a repeated `audience:` line, an audience holding U+2028 and a time in an extended year, and a canonical control that verifies. |
+| One-line values (SPEC §2.2) | `tv32` | Attestations validly signed by burn key #1 with a value holding a C0 control, DEL, U+0085, U+2028 or U+2029, in an extension, an identity, the address or issued_at, each `decode_error` and refused by a builder, and a control holding a value outside ASCII. |
 
 The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private keys published inside `conformance/generate-signatures.mjs` that are never to be used for real funds. They exist only so the vector set stays deterministically reproducible. A new implementation proves its BIP-322 verifier is correct by making `tv21` + `tv22` verify and `tv23` fail.
 
@@ -161,6 +162,41 @@ Every case's signature verifies for `address`. A verifier answers `reason`: `dec
 
 Every case's signature verifies for `address`. A verifier given `now` and the expected nonce, audience and purpose answers `reason`: `malformed` for each challenge that is not in canonical form (SPEC Appendix A.1 rule 6), and verifies the control. The canonical text without its final LF is not a case: a reader MAY accept it. `conformance/generate-challenge-form.mjs` regenerates the vector byte for byte.
 
+### Category: `value_form`
+
+```jsonc
+{
+  "input": {
+    "address": "bc1q...",            // burn key #1, as tv21
+    "scheme": "bip322",
+    "nonce": "0011223344556677889900aabbccddee",
+    "issued_at": "2026-04-22T12:00:00Z",
+    "cases": [
+      {
+        "name": "an aud holding U+2028",
+        "identities": [{ "protocol": "github", "identifier": "conformance" }],
+        "extensions": { "aud": "https://example.com\u2028network: testnet", "expires": "2030-01-01T00:00:00Z" },
+        "message": "orangecheck\n...",
+        "signature": "<base64>",
+        "reason": "decode_error"
+      },
+      {
+        "name": "an issued_at ending in U+2028",
+        "identities": [{ "protocol": "github", "identifier": "conformance" }],
+        "extensions": { "aud": "https://example.com", "expires": "2030-01-01T00:00:00Z" },
+        "issued_at": "2026-04-22T12:00:00Z\u2028", // optional: a core value written in place of the input's
+        "message": "orangecheck\n...",
+        "signature": "<base64>",
+        "reason": "decode_error"
+      }
+    ]
+  },
+  "expected": { "signatures_valid": true }
+}
+```
+
+Every case's signature verifies for the input's `address`. A case's `address` or `issued_at`, when present, is the value its message holds in place of the input's; each ends in the character, where a reader that trims the value would drop it. A verifier given the input's `address` answers `reason`: `decode_error` for each message with a value that is not one line (SPEC §2.2, §7.1 step 1.j), and does not for the control. A builder given a case's `identities` and `extensions`, with the vector's `nonce`, and the case's `address` and `issued_at` where it has them (the input's otherwise), refuses to write each such message, and writes the control's `message` byte for byte. A lone surrogate is not a case: JSON cannot carry one portably (RFC 8259 §8.2), so an implementation whose strings are UTF-16 tests it on its own. `conformance/generate-value-form.mjs` regenerates the vector byte for byte.
+
 ## Running the vectors
 
 ### TypeScript (`@orangecheck/sdk` >= 0.1.4)
@@ -192,3 +228,4 @@ Read the vectors/ files, run each through the appropriate entry point, assert `e
 - **2026-10-16** — Added the bond vectors `tv24`–`tv28` with [BOND.md](../BOND.md) (draft): message and id, signatures and their window, keyed nullifiers, floors.
 - **2026-10-24** — Added `bond_extension` (`tv29`): which `bond:` values give an amount and which are `bond_malformed` (SPEC §2.2).
 - **2026-11-09** — Added `challenge_form` (`tv31`): sign-in challenges that are not in canonical form are `malformed` (SPEC Appendix A.1).
+- **2026-11-09** — Added `value_form` (`tv32`): an attestation with a value that is not one line is `decode_error`, and a builder refuses to write it (SPEC §2.2).

@@ -91,6 +91,7 @@ Optional **additional** lines follow, each `key: value` on its own line, with a 
 
 - Keys: lowercase ASCII, **sorted lexicographically** (deterministic)
 - Each key, core or extension, appears **at most once**. A verifier **MUST** reject a message that repeats a key with `decode_error`: a key signed twice has two values, and two verifiers could read different ones.
+- Each value, core or extension, is **one line**. It holds no C0 control character (U+0000 to U+001F), DEL (U+007F), U+0085, U+2028 or U+2029, and no lone surrogate. A builder **MUST NOT** write such a value, and a verifier **MUST** reject a message that holds one with `decode_error` (vector `tv32`): a wallet or another reader may show a control character or separator as a line break, and so display a line that no verifier reads. An implementation whose strings are UTF-16 **MUST** refuse a lone surrogate before it encodes the message, since an encoder writes U+FFFD in its place and one signature would then cover two strings.
 - Entire message (core + extensions) is signed
 - Verifiers **MUST** ignore unknown keys unless local policy requires them
 
@@ -121,7 +122,8 @@ core            = "orangecheck" LF
 extlines        = *( extline )
 extline         = key ": " value LF
 key             = 1*( %x61-7A )                     ; a-z
-value           = *( %x20-7E )                      ; printable ASCII (UTF-8 allowed)
+value           = *( %x20-7E / %x80-84 / %x86-2027 / %x202A-D7FF / %xE000-10FFFF )
+                                                    ; code points, UTF-8 encoded (§2.2)
 identities      = [ identity-binding *( "," identity-binding ) ]
 identity-binding = protocol ":" identifier
 protocol        = 1*( %x61-7A / %x30-39 )          ; lowercase alphanumeric
@@ -293,7 +295,7 @@ Attestations **MAY** be published to Nostr relays for decentralized discovery.
 Given `(addr, msg, sig, scheme)`:
 
 1. **Canonical checks**
-   a. Decode `msg` (base64url → UTF‑8)
+   a. Decode `msg` (base64url → UTF‑8). The UTF-8 decode is strict: bytes that are not well-formed UTF-8, such as `ED A0 80` (an encoded surrogate), are refused, never replaced with U+FFFD
    b. Ensure LF line ends, no CR anywhere, and **exactly one** trailing LF
    c. Header and core lines present & in order, nothing among them; exact literals for header/purpose/ack; every line after them is an extension
    d. If extensions exist, **keys are lowercase ASCII and lexicographically sorted**, each line `key: value` with a value
@@ -302,8 +304,9 @@ Given `(addr, msg, sig, scheme)`:
    g. `issued_at` parses as RFC‑3339 UTC (else `decode_error`)
    h. `identities` field parses (protocol:identifier format) and is written as §2.1.1 writes it, sorted
    i. No key appears twice (§2.2)
+   j. Every value is one line: no C0 control character, DEL, U+0085, U+2028, U+2029 or lone surrogate (§2.2)
 
-   A message that fails any of a–d, f, h or i is not an attestation, however validly it is signed: return `decode_error` (vector `tv30`).
+   A message that fails any of a–d, f or h–j is not an attestation, however validly it is signed: return `decode_error` (vectors `tv30`, `tv32`).
 
 2. **Attestation ID derivation**
    - Compute `attestation_id = SHA-256(msg)`
@@ -552,7 +555,7 @@ ack: I authorize this session under the OrangeCheck auth challenge.
 3. Core lines MUST appear in the order shown, each exactly once, with nothing among them.
 4. Extension keys MUST be lowercase printable ASCII with no colon or space, MUST NOT be a core key, and MUST appear at most once each, sorted in strictly ascending byte order. Each extension MUST carry a non-empty value.
 5. `expires_at − issued_at` SHOULD be ≤ 10 minutes; implementations MUST reject expired challenges.
-6. **A challenge is valid only in its canonical form.** Every line after the header is `<key>: <value>`. A reader takes the value as every byte after the first `: ` on its line, and does not trim it. No value holds a C0 control character (U+0000 to U+001F), DEL (U+007F), U+0085, U+2028 or U+2029: an issuer MUST NOT write one, and a reader MUST answer `malformed` for one, because a wallet or another reader may show it as a line break and so display lines that a verifier does not read. There are no blank lines. Lines end in LF, with no CR anywhere, and the text ends in one LF. `issued_at` and `expires_at` are written `YYYY-MM-DDTHH:MM:SSZ` (UTC, whole seconds, a four-digit year from 0000 to 9999); a reader MUST check that pattern before it parses a time, since a date parser may also read an extended year such as `+010000-01-01T00:00:00Z`. A verifier MUST accept the canonical text. It MAY accept the same text without its final LF (a shell's command substitution drops it) as the same challenge, checking the signature over the bytes it was given. It MUST answer `malformed` for any other text, however validly signed, so that every verifier reads the same values from the same signed bytes. A relying party that issued the challenge SHOULD also compare the signed text byte for byte with the text it issued. Vector `tv31`.
+6. **A challenge is valid only in its canonical form.** Every line after the header is `<key>: <value>`. A reader takes the value as every byte after the first `: ` on its line, and does not trim it. No value holds a C0 control character (U+0000 to U+001F), DEL (U+007F), U+0085, U+2028 or U+2029: an issuer MUST NOT write one, and a reader MUST answer `malformed` for one, because a wallet or another reader may show it as a line break and so display lines that a verifier does not read. Nor does a value hold a lone surrogate: an implementation whose strings are UTF-16 MUST refuse one before it encodes the text, since an encoder writes U+FFFD in its place and one signature would then cover two strings. There are no blank lines. Lines end in LF, with no CR anywhere, and the text ends in one LF. `issued_at` and `expires_at` are written `YYYY-MM-DDTHH:MM:SSZ` (UTC, whole seconds, a four-digit year from 0000 to 9999); a reader MUST check that pattern before it parses a time, since a date parser may also read an extended year such as `+010000-01-01T00:00:00Z`. A verifier MUST accept the canonical text. It MAY accept the same text without its final LF (a shell's command substitution drops it) as the same challenge, checking the signature over the bytes it was given. It MUST answer `malformed` for any other text, however validly signed, so that every verifier reads the same values from the same signed bytes. A relying party that issued the challenge SHOULD also compare the signed text byte for byte with the text it issued. Vector `tv31`.
 
 ### A.2 Registered Extensions
 
