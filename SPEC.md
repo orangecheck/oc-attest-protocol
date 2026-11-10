@@ -105,7 +105,7 @@ Optional **additional** lines follow, each `key: value` on its own line, with a 
   2. Use **exactly** `bond` for all displays and scoring (any surplus is ignored)
   3. Derive `days_unspent` for the bonded stake via the **oldest-first greedy** rule (see §5.4)
 - `expires:` — RFC-3339 UTC. Verifiers **SHOULD** warn or reject if in the past. A verifier **MUST** reject as `expired` an attestation whose `expires:` value is present but is not an RFC-3339 date-time.
-- `network:` — `mainnet` (default), `testnet`, or `signet`
+- `network:` — `mainnet` (default), `testnet`, or `signet`. The address MUST be one of the selected network's (§7.1 step 3): a builder writes no other value, and no address of another network under it
 - `publish:` — comma-separated list of publishing targets (e.g., `nostr,ipfs`)
 - `relay_hints:` — comma-separated Nostr relay URLs (e.g., `wss://relay1.com,wss://relay2.com`)
 - `scope:` — human label for context (e.g., `x:@alice`, `web:alice.dev`)
@@ -322,8 +322,8 @@ Given `(addr, msg, sig, scheme)`:
 3. **Network selection**
    - If `network: testnet` present, use testnet
    - If `network: signet` present, use signet
-   - Otherwise use mainnet
-   - Address prefix MUST match selected network
+   - Otherwise use mainnet, whatever else a `network:` value is (values are read as written, §2.2)
+   - Address prefix MUST match selected network: an `addr` that decodes as another network's address (a `tb1…`, `m…` or `n…` address under mainnet, a `bc1…` or `1…` address under testnet or signet) returns `bad_request` (vector `tv34`), before any Policy code such as `network_testmode`
 
 4. **Signature verification**
    - If `scheme=bip322`, attempt BIP‑322 verification
@@ -476,7 +476,7 @@ When displaying scores:
 - `network_testmode` (testnet or signet indicated but verifier not in test mode)
 
 **Transport / Input**  
-- `bad_request` (missing params, or an `addr` that is not the message's `address:` value, §7.1 step 1.e)  
+- `bad_request` (missing params, an `addr` that is not the message's `address:` value, §7.1 step 1.e, or an `addr` of another network than the one the message selects, step 3)  
 - `decode_error` (base64url or UTF‑8)  
 - `invalid_scheme`
 
@@ -504,22 +504,8 @@ An implementation **conforms** to OCP v0 if:
 
 ## 11) Test Vectors **(normative list; fixtures in repo)**
 
-Provide vectors under `/conformance/vectors` with fields:  
-`addr`, `msg`, `sig`, `scheme`, `expect: { status[], sats_bonded, days_unspent, score_v0 }` (+ mocked UTXO set).
-
-Suggested set:
-- **tv1.json** — valid `bip322` P2WPKH; no extensions.
-- **tv2.json** — valid `bip322` P2TR; with `expires` future.
-- **tv3.json** — valid `legacy` P2PKH.
-- **tv4.json** — invalid (nonce uppercase).
-- **tv5.json** — invalid (extensions unsorted).
-- **tv6.json** — valid but expired; expect `expired`.
-- **tv7.json** — testnet with `network: testnet`; expect `network_testmode` if verifier not in test mode.
-- **tv8.json** — signet with `network: signet`; expect `network_testmode` if verifier not in test mode.
-- **tv9.json**  — bond present, balance == bond → valid; age via greedy set's youngest.
-- **tv10.json** — bond present, balance > bond → valid; surplus ignored; greedy age.
-- **tv11.json** — bond present, balance < bond → invalid; expect `bond_insufficient`.
-- **tv12.json** — churn scenario: spend an old UTXO, refill ≥ bond; expect younger `days_unspent`.
+The vectors are in `conformance/vectors/`, indexed by `index.json`. `conformance/README.md` lists each one,
+what it pins down and the schema of its category.
 
 ---
 
