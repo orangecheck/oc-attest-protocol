@@ -77,6 +77,8 @@ Earlier drafts registered `email:`, `web:`, and `did:`; those are **retired for 
 - Maximum total length: 512 UTF-8 bytes
 - Unknown protocols MUST be preserved but MAY be ignored by verifiers
 - Duplicate protocols allowed (e.g., multiple GitHub accounts)
+- A protocol is a lowercase letter, then lowercase letters, digits, `_` or `-`
+- An identifier holds no comma and no whitespace at either end: a space, U+00A0, U+1680, U+2000 to U+200A, U+202F, U+205F, U+3000 or U+FEFF. A builder **MUST NOT** write one that does. A verifier reads `identities:` as written (§2.2), so a message holding one is not written as this section writes it (§7.1 step 1.h, vector `tv33`)
 
 **Examples** (the last, with no bindings, ends in one space):
 ```
@@ -89,9 +91,10 @@ identities:
 
 Optional **additional** lines follow, each `key: value` on its own line, with a value: an extension with an empty value is left out (vector `tv15`).
 
-- Keys: lowercase ASCII, **sorted lexicographically** (deterministic)
+- Keys: printable ASCII with no space, colon or capital letter, such as `relay_hints`, **sorted lexicographically** (deterministic)
 - Each key, core or extension, appears **at most once**. A verifier **MUST** reject a message that repeats a key with `decode_error`: a key signed twice has two values, and two verifiers could read different ones.
 - Each value, core or extension, is **one line**. It holds no C0 control character (U+0000 to U+001F), DEL (U+007F), U+0085, U+2028 or U+2029, and no lone surrogate. A builder **MUST NOT** write such a value, and a verifier **MUST** reject a message that holds one with `decode_error` (vector `tv32`): a wallet or another reader may show a control character or separator as a line break, and so display a line that no verifier reads. An implementation whose strings are UTF-16 **MUST** refuse a lone surrogate before it encodes the message, since an encoder writes U+FFFD in its place and one signature would then cover two strings.
+- A reader takes each value, core or extension, **as written**: every character after the first `: ` on its line, up to the LF. It **MUST NOT** trim it. A value that whitespace pads is not the value inside it: `bond: 5000` followed by a space is `bond_malformed`, an `aud:` ending in U+00A0 does not equal the origin before it, and an `expires:` or `issued_at:` ending in a space is not an RFC-3339 date-time (vector `tv33`). The signer and every verifier then read one value from each signed line.
 - Entire message (core + extensions) is signed
 - Verifiers **MUST** ignore unknown keys unless local policy requires them
 
@@ -111,7 +114,7 @@ Optional **additional** lines follow, each `key: value` on its own line, with a 
 ### 2.3 ABNF **(normative)**
 
 ```
-message         = core extlines LF
+message         = core extlines
 core            = "orangecheck" LF
                   "identities: " identities LF
                   "address: " addr LF
@@ -121,13 +124,17 @@ core            = "orangecheck" LF
                   "ack: I attest control of this address and bind it to my identities." LF
 extlines        = *( extline )
 extline         = key ": " value LF
-key             = 1*( %x61-7A )                     ; a-z
-value           = *( %x20-7E / %x80-84 / %x86-2027 / %x202A-D7FF / %xE000-10FFFF )
+key             = 1*( %x21-39 / %x3B-40 / %x5B-7E ) ; printable ASCII, no ":" or A-Z (§2.2)
+value           = *value-char                       ; as written, never trimmed (§2.2)
+value-char      = %x20-7E / %x80-84 / %x86-2027 / %x202A-D7FF / %xE000-10FFFF
                                                     ; code points, UTF-8 encoded (§2.2)
 identities      = [ identity-binding *( "," identity-binding ) ]
 identity-binding = protocol ":" identifier
-protocol        = 1*( %x61-7A / %x30-39 )          ; lowercase alphanumeric
-identifier      = 1*( %x21-7E )                     ; printable ASCII
+protocol        = %x61-7A *( %x61-7A / %x30-39 / "_" / "-" )
+                                                    ; a-z, then a-z, 0-9, "_" or "-"
+identifier      = 1*id-char                         ; no whitespace at either end (§2.1.1)
+id-char         = %x20-2B / %x2D-7E / %x80-84 / %x86-2027 / %x202A-D7FF / %xE000-10FFFF
+                                                    ; a value-char other than ","
 addr            = 1*( %x21-7E )
 nonce           = 32hexdig-lower
 isotime         = 1*( %x20-7E )                     ; MUST parse as RFC3339 UTC ("Z")
@@ -298,7 +305,7 @@ Given `(addr, msg, sig, scheme)`:
    a. Decode `msg` (base64url → UTF‑8). The UTF-8 decode is strict: bytes that are not well-formed UTF-8, such as `ED A0 80` (an encoded surrogate), are refused, never replaced with U+FFFD
    b. Ensure LF line ends, no CR anywhere, and **exactly one** trailing LF
    c. Header and core lines present & in order, nothing among them; exact literals for header/purpose/ack; every line after them is an extension
-   d. If extensions exist, **keys are lowercase ASCII and lexicographically sorted**, each line `key: value` with a value
+   d. If extensions exist, **keys are printable ASCII with no space, colon or capital letter (§2.2) and lexicographically sorted**, each line `key: value` with a value
    e. `address` line value equals `addr`
    f. `nonce` matches 32 hex lowercase
    g. `issued_at` parses as RFC‑3339 UTC (else `decode_error`)
@@ -306,7 +313,7 @@ Given `(addr, msg, sig, scheme)`:
    i. No key appears twice (§2.2)
    j. Every value is one line: no C0 control character, DEL, U+0085, U+2028, U+2029 or lone surrogate (§2.2)
 
-   A message that fails any of a–d, f or h–j is not an attestation, however validly it is signed: return `decode_error` (vectors `tv30`, `tv32`).
+   A message that fails any of a–d, f or h–j is not an attestation, however validly it is signed: return `decode_error` (vectors `tv30`, `tv32`). Each check reads values as written (§2.2), so an `issued_at` or identity that whitespace pads fails it (vector `tv33`). A message that fails e names an address other than the request's `addr`: return `bad_request` (vector `tv33`).
 
 2. **Attestation ID derivation**
    - Compute `attestation_id = SHA-256(msg)`
@@ -469,7 +476,7 @@ When displaying scores:
 - `network_testmode` (testnet or signet indicated but verifier not in test mode)
 
 **Transport / Input**  
-- `bad_request` (missing params)  
+- `bad_request` (missing params, or an `addr` that is not the message's `address:` value, §7.1 step 1.e)  
 - `decode_error` (base64url or UTF‑8)  
 - `invalid_scheme`
 

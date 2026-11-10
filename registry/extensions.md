@@ -1,7 +1,7 @@
 # OrangeCheck Extension Key Registry
 
 This document registers **signed, in-message** extensions for OrangeCheck (see SPEC.md §2.2).
-All keys are **lowercase ASCII** and extensions appear **sorted lexicographically** in the canonical message.
+All keys are **printable ASCII with no space, colon or capital letter** (such as `relay_hints`), extensions appear **sorted lexicographically** in the canonical message, and each value is read as written, never trimmed (SPEC §2.2).
 
 > **Compatibility:** Verifiers MUST ignore unknown keys unless a relying party (RP) opts into policy checks.
 

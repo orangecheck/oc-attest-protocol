@@ -22,6 +22,7 @@ This vector set covers:
 | Canonical form (SPEC §7.1 step 1) | `tv30` | Messages validly signed by burn key #1 that are not attestations in canonical form, each `decode_error`, and a canonical control that is not. |
 | Challenge form (SPEC Appendix A.1) | `tv31` | `orangecheck-auth` challenges validly signed by burn key #1 that are not in canonical form, each `malformed`, among them a repeated `audience:` line, an audience holding U+2028 and a time in an extended year, and a canonical control that verifies. |
 | One-line values (SPEC §2.2) | `tv32` | Attestations validly signed by burn key #1 with a value holding a C0 control, DEL, U+0085, U+2028 or U+2029, in an extension, an identity, the address or issued_at, each `decode_error` and refused by a builder, and a control holding a value outside ASCII. |
+| Values as written (SPEC §2.2) | `tv33` | Attestations validly signed by burn key #1 with one value that whitespace pads: a `bond:` (`bond_malformed`), an `aud:` (`aud_mismatch`), an `expires:` (`expired`), an identity or `issued_at` (`decode_error`) or the address (`bad_request`), and a control that pads nothing. Each case's `builder`, where it has one, says whether a builder writes its identities and extensions or refuses them. |
 
 The signature vectors (`tv21`–`tv23`) use **disclosed burn keys** — private keys published inside `conformance/generate-signatures.mjs` that are never to be used for real funds. They exist only so the vector set stays deterministically reproducible. A new implementation proves its BIP-322 verifier is correct by making `tv21` + `tv22` verify and `tv23` fail.
 
@@ -197,6 +198,44 @@ Every case's signature verifies for `address`. A verifier given `now` and the ex
 
 Every case's signature verifies for the input's `address`. A case's `address` or `issued_at`, when present, is the value its message holds in place of the input's; each ends in the character, where a reader that trims the value would drop it. A verifier given the input's `address` answers `reason`: `decode_error` for each message with a value that is not one line (SPEC §2.2, §7.1 step 1.j), and does not for the control. A builder given a case's `identities` and `extensions`, with the vector's `nonce`, and the case's `address` and `issued_at` where it has them (the input's otherwise), refuses to write each such message, and writes the control's `message` byte for byte. A lone surrogate is not a case: JSON cannot carry one portably (RFC 8259 §8.2), so an implementation whose strings are UTF-16 tests it on its own. `conformance/generate-value-form.mjs` regenerates the vector byte for byte.
 
+### Category: `value_as_written`
+
+```jsonc
+{
+  "input": {
+    "address": "bc1q...",            // burn key #1, as tv21
+    "scheme": "bip322",
+    "nonce": "0011223344556677889900aabbccddee",
+    "issued_at": "2026-04-22T12:00:00Z",
+    "now": "2026-04-22T12:00:00Z",   // the verifier's clock
+    "expected_aud": "https://example.com",
+    "cases": [
+      {
+        "name": "an aud ending in U+00A0",
+        "identities": [{ "protocol": "github", "identifier": "conformance" }],
+        "extensions": { "aud": "https://example.com\u00a0", "expires": "2030-01-01T00:00:00Z" },
+        "message": "orangecheck\n...",
+        "signature": "<base64>",
+        "reason": "aud_mismatch",
+        "builder": "writes"           // optional: "writes" or "refuses"
+      },
+      {
+        "name": "an address ending in a space",
+        "identities": [{ "protocol": "github", "identifier": "conformance" }],
+        "extensions": { "aud": "https://example.com", "expires": "2030-01-01T00:00:00Z" },
+        "address": "bc1q... ",         // optional: a core value written in place of the input's
+        "message": "orangecheck\n...",
+        "signature": "<base64>",
+        "reason": "bad_request"
+      }
+    ]
+  },
+  "expected": { "signatures_valid": true }
+}
+```
+
+Every case's signature verifies for the input's `address`. A verifier given the input's `address` and `expected_aud`, with its clock at `now`, reads each value as written (SPEC §2.2) and answers `reason`, the first of `decode_error`, `bad_request`, `aud_mismatch`, `expired` and `bond_malformed` it returns, or null for the control. A reader that trims would take each padded value as the one inside it. Where a case has `builder`, a builder given its `identities` and `extensions`, with the input's `address`, `nonce` and `issued_at`, writes `message` byte for byte (`writes`) or refuses them (`refuses`: a padded `bond:` or identity).
+
 ## Running the vectors
 
 ### TypeScript (`@orangecheck/sdk` >= 0.1.4)
@@ -229,3 +268,4 @@ Read the vectors/ files, run each through the appropriate entry point, assert `e
 - **2026-10-24** — Added `bond_extension` (`tv29`): which `bond:` values give an amount and which are `bond_malformed` (SPEC §2.2).
 - **2026-11-09** — Added `challenge_form` (`tv31`): sign-in challenges that are not in canonical form are `malformed` (SPEC Appendix A.1).
 - **2026-11-09** — Added `value_form` (`tv32`): an attestation with a value that is not one line is `decode_error`, and a builder refuses to write it (SPEC §2.2).
+- **2026-11-10** — Added `value_as_written` (`tv33`): a verifier reads each value as written, never trimmed, and a builder refuses a padded `bond:` or identity (SPEC §2.2).
